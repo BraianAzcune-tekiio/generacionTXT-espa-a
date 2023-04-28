@@ -1,0 +1,7 @@
+{
+  "search.exclude": {
+    "node_modules": true,
+    "archivos-referencia": true,
+    "**/*.OLD.js": true,
+  }
+}

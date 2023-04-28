@@ -1,0 +1,15 @@
+{
+  "name": "reingenieria-codigo",
+  "version": "1.0.0",
+  "description": "{Enviar Email FE Lotes} no esta migrado a 2.1",
+  "main": "Middleware-FacturaElectronica.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.29.0",
+    "eslint-plugin-es": "^4.1.0"
+  }
+}
