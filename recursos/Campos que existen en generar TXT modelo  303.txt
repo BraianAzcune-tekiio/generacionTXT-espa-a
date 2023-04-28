@@ -1,0 +1,143 @@
+Campos que existen en generar TXT modelo  303
+CODIGO MINIMO EXTRAIDO DE Modelo_303.js
+hay que revisar la logica que maneja a fondo, pero ahora crear una cascara unicamente
+
+DENTRO DEL GRUPO VISIBLE=
+form.addFieldGroup('grupo1', 'Identificación', '303subtab').setShowBorder(true);
+_________________________________________________________
+// se agrega unicamente si es oneWorld
+form.addField('subsid', 'select', 'SUBSIDIARIA', 'subsidiary', 'grupo1').setMandatory(
+true).setLayoutType('startrow').setDisplaySize('5');
+
+_________________________________________________________
+// Selector de Ejercicio. Solo se muestra el ejercicio actual y el anterior.
+        
+        var ejercicioSelector = form.addField('ejerciciosel', 'select', 'EJERCICIO', 'null', 'grupo1').setMandatory(true).setLayoutType('midrow');
+        for (i = currentYear-1; i <= currentYear; i++){
+            if (currentYear == i) {
+                ejercicioSelector.addSelectOption(i, i, true);
+            } else {
+                ejercicioSelector.addSelectOption(i, i);
+            }
+        }
+        var ejercicio = currentYear;
+_________________________________________________________
+// ! EXISTE UN SS QUE OBTIENE ESTO, 
+//Selector del Periodo. 
+        var periodo = form.addField('xperiodo', 'select', 'PERIODO', null, 'grupo1').setLayoutType('midrow');
+        periodo.addSelectOption("01","Enero",true);
+        periodo.addSelectOption("02","Febrero");
+        periodo.addSelectOption("03","Marzo");
+        periodo.addSelectOption("04","Abril");
+        periodo.addSelectOption("05","Mayo");
+        periodo.addSelectOption("06","Junio");
+        periodo.addSelectOption("07","Julio");
+        periodo.addSelectOption("08","Agosto");
+        periodo.addSelectOption("09","Septiembre");
+        periodo.addSelectOption("10","Octubre");
+        periodo.addSelectOption("11","Noviembre");
+        periodo.addSelectOption("12","Diciembre");
+        periodo.addSelectOption("1T","Primer Trimestre");
+        periodo.addSelectOption("2T","Segundo Trimestre");
+        periodo.addSelectOption("3T","Tercer Trimestre");
+        periodo.addSelectOption("4T","Cuarto Trimestre");
+
+        var periodoSel = 1;
+_________________________________________________________
+var tipoDeclaracion = form.addField('xtipodecl', 'select', 'Tipo Declaración', null, 'grupo1').setLayoutType('midrow');
+        tipoDeclaracion.addSelectOption("C","Solicitud de Compensación");
+        tipoDeclaracion.addSelectOption("D","Devolución");
+        tipoDeclaracion.addSelectOption("G","Cuenta corriente Tributaria - Ingreso");
+        tipoDeclaracion.addSelectOption("I","Ingreso", true);
+        tipoDeclaracion.addSelectOption("N","sin actividad/resultado cero");
+        tipoDeclaracion.addSelectOption("V","Cuenta corriente tributaria -devolució");
+        tipoDeclaracion.addSelectOption("U","Domiciliacion del ingreso en CCC");
+_________________________________________________________
+form.addField('xriva', 'checkbox', '¿Inscrito en el registro de devolución mensual?', null, 'grupo2').setLayoutType('startrow');
+
+var xregimensimpli = form.addField('xregimensimplificado', 'select', '¿Tributa exclusivamente en Régimen Simplificado?', null, 'grupo2').setLayoutType('startrow');
+        xregimensimpli.addSelectOption("1","Sí");
+        xregimensimpli.addSelectOption("2","No (RG + RS)");
+        xregimensimpli.addSelectOption("3","No (sólo RG)",true);
+_________________________________________________________
+form.addField('xautoliquidacion', 'checkbox', '¿Es autoliquidación conjunta?', null, 'grupo2').setLayoutType('startrow');
+_________________________________________________________
+form.addField('xconcursoacree', 'checkbox', '¿Declarado en concurso de acreedores en el presente período?', 'null', 'grupo2').setLayoutType('startrow');
+_________________________________________________________
+form.addField('xfechaconcurso', 'date', 'Fecha declaración', null, 'grupo2').setLayoutType('startrow').setHelpText('Fecha en que se dictó el auto de declaración de concurso');
+_________________________________________________________
+form.addField('xivadiferido', 'checkbox', 'IVA DIFERIDO', 'null', 'grupo2').setLayoutType('startrow');
+_________________________________________________________
+form.addField('declaranterazon', 'text', 'RAZON SOCIAL / APELLIDOS Y NOMBRE', null, 'grupo1').setDisplaySize(25).setMandatory(true).setLayoutType('startrow');
+_________________________________________________________
+form.addField('declarantenif', 'text', 'NIF DECLARANTE', null, 'grupo1').setMandatory(true).setLayoutType('midrow');
+_________________________________________________________
+var autodeclaracion = form.addField('xautodeclaracion', 'select', 'Auto de declaración de concurso dictado en el período', null, 'grupo2').setLayoutType('startrow', 'startcol');
+        autodeclaracion.addSelectOption(" ","No",true);
+        autodeclaracion.addSelectOption("01","Preconcursal");
+        autodeclaracion.addSelectOption("02","Postconcursal");
+_________________________________________________________
+form.addField('xcriteriocaja', 'checkbox', '¿Sujeto pasivo acogido al régimen especial del criterio de Caja (art. 163 undecies LIVA)?', null, 'grupo2');
+_________________________________________________________
+form.addField('xdestinatariocriterio', 'checkbox', '¿Destinatario de las operaciones a las que se aplique el régimen especial del criterio de Caja?', null, 'grupo2');
+
+_________________________________________________________
+form.addField('xaplprorrata', 'checkbox', '¿Opción por la aplicación de la prorrata especial?', null, 'grupo2');
+_________________________________________________________
+form.addField('xrenprorrata', 'checkbox', '¿Revocación de la opción por la aplicación de la prorrata especial?', null, 'grupo2');
+_________________________________________________________
+var exonerado = form.addField('xvoloperaciones', 'select', '¿Existe volumen de operaciones (art. 121 LIVA)?', null, 'grupo2');
+        exonerado.addSelectOption("00","No Exonerado",true);
+        exonerado.addSelectOption("01","Sí (Exonerado)");
+        exonerado.addSelectOption("02","No (Exonerado)");
+_________________________________________________________
+form.addField('xsujetopasivo', 'checkbox', 'Tributación exclusivamente foral', null, 'grupo2');
+
+_________________________________________________________
+form.addField('xacogidosii', 'checkbox', '¿Sujeto pasivo acogido voluntariamente al SII?', null, 'grupo2');
+_________________________________________________________
+form.addField('xexonerado', 'checkbox', '¿Está exonerado de la Declaración-resumen anual del IVA, modelo 390?', null, 'grupo2');
+_________________________________________________________
+form.addField('territoriocomun', 'integer', 'Información de la tributación por razón de territorio: Territorio común [107]', null, 'grupo2');
+_________________________________________________________
+DENTRO DEL GRUPO VISIBLE=
+form.addFieldGroup('grupo3', 'Resultado', '303subtab').setShowBorder(true);
+_________________________________________________________
+form.addField('sumtotal','currency','Importe',null,'grupo3').setDisplayType('inline');
+_________________________________________________________
+form.addField('xcuotascomp', 'float', 'Cuotas a compensar pendientes de periodos anteriores', null, 'grupo3').setLayoutType('startrow');
+_________________________________________________________
+form.addField('xcuotascompactual', 'float', 'Cuotas a compensar de periodos anteriores aplicadas en este periodo', null, 'grupo3');
+_________________________________________________________
+form.addField('xporcentatrib', 'float', '% Atribuible a la Admin', null, 'grupo3').setDefaultValue("100.00");
+_________________________________________________________
+form.addField('xdeducir', 'float', 'A Deducir', null, 'grupo3');
+_________________________________________________________
+form.addField('xswift', 'float', 'Código SWIFT', null, 'grupo3');
+_________________________________________________________
+form.addField('xiban', 'text', 'IBAN', null, 'grupo3');
+_________________________________________________________
+
+SUBLISTA QUE SE MUESTRA ABAJO
+
+var exportList = form.addSubList('custpage_303_sublist','list', 'Modelo 303','303subtab');
+exportList.addField('xnumlinea', 'integer', 'Línea');
+exportList.addField('xtasa', 'float', 'Tasa');
+exportList.addField('xcodigoce', 'text', 'Codigo CE').setDisplayType('inline');
+exportList.addField('xautorepercutido', 'text', 'Autorepercutido').setDisplayType('inline');
+exportList.addField('ximportacion', 'text', 'Importacion');
+exportList.addField('xexportar', 'text', 'Exportar');
+exportList.addField('xarticuloimp', 'text', 'Articulo de Impuesto');
+exportList.addField('ximportedebito', 'currency', 'Importe Débito');
+exportList.addField('ximportecredito', 'currency', 'Importe Crédito');
+exportList.addField('xbaseimp', 'currency', 'Base Imponible');
+exportList.addField('ximpuestos', 'currency', 'Impuestos');
+if(oneWorld){
+   exportList.addField('xsubsidiaria', 'text', 'Subsidiaria');
+}
+exportList.addField('xtasaparent', 'float', 'Impuesto Derivado');
+exportList.addField('xtipoop', 'text', 'Tipo Operación');
+exportList.addField('xnosujeto', 'text', 'No Sujeto');
+exportList.addField('xbienesinversion', 'text', 'IVA Bienes Inmuebles');
+exportList.addField('xservicio', 'text', 'Aplica al servicio');
+
