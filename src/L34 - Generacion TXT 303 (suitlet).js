@@ -14,7 +14,6 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
             erro_texto: "custpage_field_error_mensaje",
             subsidiaria: "custpage_subsidiaria",
             tipo_txt: "custpage_tipo_txt",
-            ejercicio: "custpage_ejercicio",
             periodo: "custpage_periodo",
             tipoDeclaracion: "custpage_tipo_declaracion",
             inscriptoDevolucionMensual: "custpage_inscripto_devolucion_mensual",
@@ -25,7 +24,16 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
             ivaDiferido: "custpage_iva_diferido",
             razonSocial: "custpage_razon_social",
             nifDeclarante: "custpage_nif_declarante",
-            autoDeclaracionConcursoDictadoEnPeriodo: "custpage_auto_declaracion_concurso_dictado_en_periodo"
+            autoDeclaracionConcursoDictadoEnPeriodo: "custpage_auto_declaracion_concurso_dictado_en_periodo",
+            sujetoPasivoAcogidoCriterioCaja: "custpage_sujeto_pasivo_acogido_criterio_caja",
+            destinatarioOperacionCriterioCaja: "custpage_destinatario_operacion_criterio_caja",
+            opcionAplicacionProrrataEspecial: "custpage_opcion_aplicacion_prorrata_especial",
+            revocacionOpcionPorAplicacionProrrataEspecial: "custpage_revocacion_opcion_por_aplicacion_prorrata_especial",
+            existeVolumenOperaciones: "custpage_existe_volumen_operaciones",
+            tributacionExclusivamenteForal: "custpage_tributacion_exclusivamente_foral",
+            sujetoPasivoAcogidoSII: "custpage_sujeto_pasivo_acogido_sii",
+            exoneradoResumenAnualIVA390: "custpage_exonerado_resumen_anual_iva_390",
+            informacionTributariaRazonTerritorioComun107: "custpage_informacion_tributaria_razon_territorio_comun_107"
         };
 
         function onRequest(context){
@@ -94,7 +102,6 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
 
                 construirTipoTXT();
                 construirSubsidiaria();
-                construirEjercicio();
                 construirPeriodo();
                 construirTipoDeclaracion();
                 construirInscriptoDevolucionMensual();
@@ -106,6 +113,15 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 construirRazonSocial();
                 construirNifDeclarante();
                 construirAutoDeclaracionConcursoDictadoEnPeriodo();
+                construirSujetoPasivoAcogidoCriterioCaja();
+                construirDestinatarioOperacionCriterioCaja();
+                construirOpcionAplicacionProrrataEspecial();
+                construirRevocacionOpcionPorAplicacionProrrataEspecial();
+                construirExisteVolumenOperaciones();
+                construirTributacionExclusivamenteForal();
+                construirSujetoPasivoAcogidoSII();
+                construirExoneradoResumenAnualIVA390();
+                construirInformacionTributariaRazonTerritorioComun107();
 
                 function construirSubsidiaria(){
                     if(runtime.isFeatureInEffect({
@@ -132,38 +148,11 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                     });
                     tipoTXT.defaultValue = `<html><body><p>Tipo TXT: ${runtime.getCurrentScript().getParameter("custscript_l32_generacion_txt_tipo_txt")}</p></body></html>`;
                 }
-                function construirEjercicio(){
-                    // ! PUEDE QUE EJERCICIO Y PERIODO SE FUCIONEN EN UNO, SI SE USA EL RECORD DE NETSUITE
-                    const ejercicio = form.addField({
-                        id: idCamposFormulario.ejercicio,
-                        label: "Ejercicio",
-                        type: "select",
-                        source: null,
-                        container: idTab
-                    });
-                    ejercicio.isMandatory = true;
-                    // ! OPCION HARDCODEADA, solo este año y el anterior como opciones.
-                    const currentYear = new Date().getFullYear();
-                    ejercicio.addSelectOption({
-                        value: currentYear-1,
-                        text: currentYear-1,
-                    });
-                    ejercicio.addSelectOption({
-                        value: currentYear,
-                        text: currentYear,
-                        isSelected: true
-                    });
-                    ejercicio.addSelectOption({
-                        value: 1,
-                        text: "OPCION HARDCODEADA",
-                    });
-                }
                 function construirPeriodo(){
                     const periodo = form.addField({
                         id: idCamposFormulario.periodo,
                         label: "Periodo",
                         type: "select",
-                        source: null,
                         container: idTab
                     });
                     
@@ -171,20 +160,15 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                         id: "customsearch_l34_periodo_fiscal",
                     }).run().getRange({start:0, end : 1000});
 
-                    const periodosOpciones = searchResults.map(result => {
+                    searchResults.forEach(result => {
                         const columns = result.columns;
-                        return {
-                            internalid: result.getValue(columns[0]),
-                            nombre: result.getValue(columns[1])
-                        };
-                    });
-                      
-                    periodosOpciones.forEach(periodoOpcion => {
                         periodo.addSelectOption({
-                            value: periodoOpcion.internalid,
-                            text: periodoOpcion.nombre,
+                            value: result.getValue(columns[0]),
+                            text: result.getValue(columns[1]),
                         });
                     });
+                        
+                    
                 }
                 function construirTipoDeclaracion(){
                     const tipoDeclaracion = form.addField({
@@ -274,6 +258,80 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                         container: idTab
                     });
                 }
+                function construirSujetoPasivoAcogidoCriterioCaja(){
+                    form.addField({
+                        id: idCamposFormulario.sujetoPasivoAcogidoCriterioCaja,
+                        label: "Sujeto pasivo acogido al régimen especial del criterio de Caja (art. 163 undecies LIVA)",
+                        type: "checkbox",
+                        container: idTab
+                    });
+                }
+                function construirDestinatarioOperacionCriterioCaja(){
+                    form.addField({
+                        id: idCamposFormulario.destinatarioOperacionCriterioCaja,
+                        label: "Destinatario de las operaciones a las que se aplique el régimen especial del criterio de Caja",
+                        type: "checkbox",
+                        container: idTab
+                    });
+                }
+                function construirOpcionAplicacionProrrataEspecial(){
+                    form.addField({
+                        id: idCamposFormulario.opcionAplicacionProrrataEspecial,
+                        label: "Opción por la aplicación de la prorrata especial",
+                        type: "checkbox",
+                        container: idTab
+                    });
+                }
+                function construirRevocacionOpcionPorAplicacionProrrataEspecial(){
+                    form.addField({
+                        id: idCamposFormulario.revocacionOpcionPorAplicacionProrrataEspecial,
+                        label: "Revocación de la opción por la aplicación de la prorrata especial",
+                        type: "checkbox",
+                        container: idTab
+                    });
+                }
+                function construirExisteVolumenOperaciones(){
+                    form.addField({
+                        id: idCamposFormulario.existeVolumenOperaciones,
+                        label: "Existe volumen de operaciones (art. 121 LIVA)",
+                        type: "select",
+                        source: "customrecord_l34_existe_volumen_operacio",
+                        container: idTab
+                    });
+                }
+                function construirTributacionExclusivamenteForal(){
+                    form.addField({
+                        id: idCamposFormulario.tributacionExclusivamenteForal,
+                        label: "Tributación exclusivamente foral",
+                        type: "checkbox",
+                        container: idTab
+                    });
+                }
+                function construirSujetoPasivoAcogidoSII(){
+                    form.addField({
+                        id: idCamposFormulario.sujetoPasivoAcogidoSII,
+                        label: "Sujeto pasivo acogido voluntariamente al SII",
+                        type: "checkbox",
+                        container: idTab
+                    });
+                }
+                function construirExoneradoResumenAnualIVA390(){
+                    form.addField({
+                        id: idCamposFormulario.exoneradoResumenAnualIVA390,
+                        label: "Está exonerado de la Declaración-resumen anual del IVA, modelo 390",
+                        type: "checkbox",
+                        container: idTab
+                    });
+                }
+                function construirInformacionTributariaRazonTerritorioComun107(){
+                    form.addField({
+                        id: idCamposFormulario.informacionTributariaRazonTerritorioComun107,
+                        label: "Información de la tributación por razón de territorio: Territorio común [107]",
+                        type: "INTEGER",
+                        container: idTab
+                    });
+                }
+                
 
             }
         }
