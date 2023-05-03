@@ -51,14 +51,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 if(context.request.method === "GET"){
                     construirFormulario303(form);
                 }else if(context.request.method === "POST"){
-                    context.request.parameters[idCamposFormulario.subsidiaria];
-                    log.debug("ejemplo subsidiaria", JSON.stringify(context.request.parameters[idCamposFormulario.subsidiaria]));
-                    log.debug("ejemplo periodo", JSON.stringify(context.request.parameters[idCamposFormulario.periodo]));
-                    //! trae el ID, hay que hacer un record.load, para recien poder obtener el codigo_txt
-                    log.debug("ejemplo tributaExclusivamenteRegimenSimplificado", JSON.stringify(context.request.parameters[idCamposFormulario.tributaExclusivamenteRegimenSimplificado]));
-                    // ! el checkbox lo devuelve como "T"
-                    log.debug("ejemplo inscriptoDevolucionMensual", JSON.stringify(context.request.parameters[idCamposFormulario.inscriptoDevolucionMensual]));
-
+                    generarTXT303(context);
                 }else{
                     log.error(proceso, "context.request.method invalido= "+context.request.method);
                     throw {
@@ -88,6 +81,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
         function construirFormulario303(form){
             
             construirTabIdentificacion();
+            // ! si se crean mas campos de tipo record hay que agregar la carga a parsearCamposFormularios
             form.addSubmitButton({
                 label: "Generar TXT"
             });
@@ -157,7 +151,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                     });
                     
                     const searchResults = search.load({
-                        id: "customsearch_l34_periodo_fiscal",
+                        id: "customsearch_l34_periodo_contable",
                     }).run().getRange({start:0, end : 1000});
 
                     searchResults.forEach(result => {
@@ -178,6 +172,8 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                         source: "customrecord_l34_tipo_declaracion",
                         container: idTab
                     });
+                    tipoDeclaracion.isMandatory = true;
+                    tipoDeclaracion.defaultValue;
                 }
                 function construirInscriptoDevolucionMensual(){
                     const inscripcion = form.addField({
@@ -334,6 +330,63 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 
 
             }
+        }
+        function esCheckBox(valorCampo){
+            if(valorCampo == "F" || valorCampo == "T" ||  valorCampo === true || valorCampo ===false) return true;
+            return false;
+        }
+        function parsearCheckBoxParaTXT(valorCampo){
+            //convertir a como acepta el TXT 1 para si 2 para no
+            if(valorCampo == "T" || valorCampo === true){
+                return "1";
+            }else if (valorCampo == "F" || valorCampo === false){
+                return "2";
+            }
+        }
+
+        function parsearCamposFormularios(parameters){
+            // obtener valores
+            const rta = Object.assign({}, idCamposFormulario); 
+
+            for(const campo of Object.keys(idCamposFormulario)){
+                const campoCustPage = idCamposFormulario[campo];
+                let valorCampo = parameters[campoCustPage];
+                if(esCheckBox(valorCampo)){
+                    valorCampo = parsearCheckBoxParaTXT(valorCampo);
+                }
+                rta[campo] = valorCampo;
+            }
+            
+            // cargar los CODIGO TXT, para los campos records
+            rta.tipoDeclaracion = record.load({
+                type: "customrecord_l34_tipo_declaracion",
+                id: rta.tipoDeclaracion,
+            }).getValue("custrecord_l34_tipo_declaraci_codigo_txt");
+            
+            rta.tributaExclusivamenteRegimenSimplificado = record.load({
+                type: "customrecord_l34_tributa_exclusiva_regim",
+                id: rta.tributaExclusivamenteRegimenSimplificado,
+            }).getValue("custrecord_l34_tributa_codigo_txt");
+            
+            rta.autoDeclaracionConcursoDictadoEnPeriodo = record.load({
+                type: "customrecord_l34_auto_declaracion_concur",
+                id: rta.autoDeclaracionConcursoDictadoEnPeriodo,
+            }).getValue("custrecord_l34_auto_declaracion_codigo");
+
+            rta.existeVolumenOperaciones = record.load({
+                type: "customrecord_l34_existe_volumen_operacio",
+                id: rta.existeVolumenOperaciones,
+            }).getValue("custrecord_l34_existe_volumen_codigo_txt");
+
+
+            return rta;
+        }
+
+        function generarTXT303(context){
+            const camposFormulario = parsearCamposFormularios(context.request.parameters);
+            log.debug("prueba parsear", JSON.stringify(camposFormulario));
+
+            
         }
 
         return {
