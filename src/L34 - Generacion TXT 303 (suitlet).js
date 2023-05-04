@@ -6,6 +6,10 @@
 
 define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/task", "N/url"],
     function (record, search, runtime, log, serverWidget, task, urlModule) {
+
+        // ! HARDCODE TIPO TXT USADO
+        const TIPO_TXT_EMPLEADO = "303";
+
         /* global define */
         /***
          * Esto es compartido por el script de cliente, se define un objeto que contiene los id, para hacer facil copy paste y no fallar.
@@ -44,7 +48,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
             });
 
             const form = serverWidget.createForm({
-                title: "Panel de generación de TXT del Modelo 303"
+                title: "Panel de generación de TXT del Modelo "+TIPO_TXT_EMPLEADO
             });
             form.clientScriptModulePath = "./L34 - Generacion TXT 303 (cliente).js";
             try {
@@ -60,14 +64,16 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                     };
                 }
             } catch (error) {
-                log.error(proceso, "ocurrio un error= "+JSON.stringify(error));
+                log.error(proceso, "error= "+JSON.stringify(error));
+                const myInlineHtml = form.addField({
+                    id: idCamposFormulario.erro_texto,
+                    label: "Mensaje error",
+                    type: serverWidget.FieldType.INLINEHTML
+                });
                 if(error.mostrarUsuario){
-                    const myInlineHtml = form.addField({
-                        id: idCamposFormulario.erro_texto,
-                        label: "Mensaje error",
-                        type: serverWidget.FieldType.INLINEHTML
-                    });
                     myInlineHtml.defaultValue = `<html><body><h2 style="color: red; margin: 10px;"> ${error.mensaje} </h2></body></html>`;
+                }else{
+                    myInlineHtml.defaultValue = "<html><body><h2 style=\"color: red; margin: 10px;\">Ocurrio un error contacte al administrador</h2></body></html>";   
                 }
             }
             
@@ -149,7 +155,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                         type: "select",
                         container: idTab
                     });
-                    
+                    periodo.isMandatory = true;
                     const searchResults = search.load({
                         id: "customsearch_l34_periodo_contable",
                     }).run().getRange({start:0, end : 1000});
@@ -192,6 +198,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                         source: "customrecord_l34_tributa_exclusiva_regim",
                         container: idTab
                     });
+                    tributa.isMandatory = true;
                 }
                 function construirAutoLiquidacionConjunta(){
                     const liquidacion = form.addField({
@@ -246,13 +253,14 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                     nifDeclarante.isMandatory = true;
                 }
                 function construirAutoDeclaracionConcursoDictadoEnPeriodo(){
-                    form.addField({
+                    const auto = form.addField({
                         id: idCamposFormulario.autoDeclaracionConcursoDictadoEnPeriodo,
                         label: "Auto de declaración de concurso dictado en el período",
                         type: "select",
                         source: "customrecord_l34_auto_declaracion_concur",
                         container: idTab
                     });
+                    auto.isMandatory = true;
                 }
                 function construirSujetoPasivoAcogidoCriterioCaja(){
                     form.addField({
@@ -287,13 +295,14 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                     });
                 }
                 function construirExisteVolumenOperaciones(){
-                    form.addField({
+                    const existeVolumen = form.addField({
                         id: idCamposFormulario.existeVolumenOperaciones,
                         label: "Existe volumen de operaciones (art. 121 LIVA)",
                         type: "select",
                         source: "customrecord_l34_existe_volumen_operacio",
                         container: idTab
                     });
+                    existeVolumen.isMandatory = true;
                 }
                 function construirTributacionExclusivamenteForal(){
                     form.addField({
@@ -343,6 +352,54 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 return "2";
             }
         }
+        function bool(s){
+            if(s == "T" || s === true) return true;
+            if(s == "F" || s === false) return false;
+            throw new Error("Este campo no es un booleano, para ser enviado"+JSON.stringify(s));
+        }
+        /**
+         * Dado el recordType del periodo, devuelve un objeto con ejercicio, periodo, en el formato que se necesita para el TXT de España
+         * Ademas de una propiedad ultimoMesQ, que es true si estamos en el mes 12 o trimestre 4.
+         * @param {recordType id= accountingperiod} recordPeriodo 
+         * @returns {{ejercicio: string, periodo: string, ultimoMesQ: boolean}} - Un objeto con las siguientes propiedades:
+         *     - {string} ejercicio - El año fiscal del período.
+         *     - {string} periodo - El período, en formato "MM" para los períodos mensuales y "T1"-"T4" para los trimestrales.
+         *     - {boolean} ultimoMesQ - Verdadero si estamos en el último mes o trimestre del año fiscal.
+         */
+        function NOUSARparsearPeriodoEjercicio(recordPeriodo){
+            const fecha = recordPeriodo.getValue("startdate");
+            const ejercicio = fecha.getFullYear().toString();
+            let periodo = "";
+            let ultimoMesQ = false;
+            if(bool(recordPeriodo.getValue("isquarter"))){
+                // cambiar Q{numero} por T{numero}
+                const nombre = String(recordPeriodo.getValue("periodname"));
+                periodo = nombre.replace(/.*Q([1-4]).*/,"T$1");
+                ultimoMesQ = periodo === "T4";
+            }else{
+                periodo = String(fecha.getMonth()).padStart(2,"0");
+                ultimoMesQ = periodo === "12";
+            }
+            return {
+                ejercicio,
+                periodo,
+                ultimoMesQ
+            };
+        }
+        /**
+         * Probar mover logica a freemarker, este codigo recibe el recordType y devuelve
+         * un objeto que tiene la fecha y si es quarter.
+         * @param {recordType id= accountingperiod} recordPeriodo 
+         * @return {{periodoFecha: Date, esTrimestre: boolean}}
+         */
+        function parsearPeriodo(recordPeriodo){
+            const fecha = recordPeriodo.getValue("startdate");
+            const esTrimestre = bool(recordPeriodo.getValue("isquarter"));
+            return {
+                periodoFecha: fecha,
+                esTrimestre: esTrimestre
+            };
+        }
 
         function parsearCamposFormularios(parameters){
             // obtener valores
@@ -356,7 +413,13 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 }
                 rta[campo] = valorCampo;
             }
-            
+
+            // cargar periodo y ejercicio
+            rta.periodo = record.load({
+                type: "accountingperiod",
+                id: rta.periodo
+            });
+            const periodoObj = parsearPeriodo(rta.periodo);
             // cargar los CODIGO TXT, para los campos records
             rta.tipoDeclaracion = record.load({
                 type: "customrecord_l34_tipo_declaracion",
@@ -378,15 +441,85 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 id: rta.existeVolumenOperaciones,
             }).getValue("custrecord_l34_existe_volumen_codigo_txt");
 
+            return {
+                ...rta,
+                periodoObj
+            };
+        }
 
-            return rta;
+        /**
+         * Carga la configuracion del primer recordType que coincida subsidiaria y tipoTXT no inactivo.
+         * 
+         * @param {string} subsidiaria (es el id de la subsidiaria)
+         * @param {string} tipoTXT  (texto plano)
+         */
+        function getConfiguracionTXT(subsidiaria, tipoTXT){
+            const configuracion = {
+                internalid: "",
+                custrecord_l34_conf_gen_txt_nom_archivo: "",
+                custrecord_l34_conf_gen_txt_plantilla: ""
+            };
+
+            const filtros = [
+                { name: "isinactive", operator: "IS", values: false },
+                {
+                    name: "custrecord_l34_conf_gen_txt_subsidiaria",
+                    operator: "ANYOF",
+                    values: subsidiaria
+                },
+                {
+                    name: "custrecord_l34_conf_gen_txt_tipo_txt",
+                    operator: "IS", // ANYOF NO FUNCIONA SI ES DE TIPO TEXTO
+                    values: tipoTXT
+                },
+            ];
+            // cuidado netsuite muta lo que le envias, esta columnas no se pueden volver a usar
+            let columnas = Object.keys(configuracion);
+            log.debug("prueba braian, columnas", JSON.stringify(columnas));
+            const resultSet = search.create({
+                type: "customrecord_l34_conf_gen_txt",
+                filters: filtros,
+                columns: columnas
+            }).run().getRange({start:0,end:1});
+
+            if(!resultSet || resultSet.length <= 0){
+                throw {
+                    mostrarUsuario: true,
+                    mensaje: "Error no se encuentra configuracion TXT para subsidiaria: "+subsidiaria+" y tipoTXT: "+tipoTXT
+                };
+            }
+            const result = resultSet[0];
+            columnas = Object.keys(configuracion);
+            columnas.forEach(columna=>{
+                configuracion[columna] = result.getValue(columna);
+            });
+
+
+            return configuracion;
+        }
+        /**
+         * 
+         * @param {string} nombreTemplate 
+         * @param {string} nif 
+         * @param {Date} fecha 
+         */
+        function getNombreArchivo(nombreTemplate, nif, fecha){
+            log.debug("recibo", JSON.stringify([nombreTemplate,nif,fecha]));
+            let nombre = nombreTemplate;
+            nombre = nombre.replace("{NIF_DECLARANTE}",nif);
+            const fechaFormateada = `${fecha.getFullYear()}${(fecha.getMonth()+1).toString().padStart(2, "0")}${fecha.getDate().toString().padStart(2, "0")}${fecha.getHours().toString().padStart(2, "0")}${fecha.getMinutes().toString().padStart(2, "0")}`;
+            nombre = nombre.replace("{YYMMDDHHmm}", fechaFormateada);
+            return nombre;
         }
 
         function generarTXT303(context){
             const camposFormulario = parsearCamposFormularios(context.request.parameters);
             log.debug("prueba parsear", JSON.stringify(camposFormulario));
+            const configuracionObj = getConfiguracionTXT(camposFormulario.subsidiaria, TIPO_TXT_EMPLEADO);
+            log.debug("prueba parsear configuracionObj", JSON.stringify(configuracionObj));
 
-            
+            const nombreArchivo = getNombreArchivo(configuracionObj.custrecord_l34_conf_gen_txt_nom_archivo, camposFormulario.nifDeclarante, new Date());
+            log.debug("nombre del archivo", nombreArchivo);
         }
 
         return {
