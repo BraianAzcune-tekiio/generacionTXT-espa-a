@@ -494,6 +494,13 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 configuracion[columna] = result.getValue(columna);
             });
 
+            const listaVacios = getListaPropiedadesVacias(configuracion);
+            if(listaVacios.length >0 ){
+                throw {
+                    mostrarUsuario: true,
+                    mensaje: "Error no se encuentran campos rellenados para la configuracion de TXT para subsidiaria: "+subsidiaria+" y tipoTXT: "+tipoTXT+" lista: "+JSON.stringify(listaVacios)
+                };
+            }
 
             return configuracion;
         }
@@ -522,6 +529,22 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
             log.debug("nombre del archivo", nombreArchivo);
         }
 
+
+        function isEmpty(value) {
+            if (value === "" || value === null || value === undefined)  return true;
+            return false;
+        }
+
+        function getListaPropiedadesVacias(obj){
+            const listaVacios = [];
+            const keys = Object.keys(obj);
+            keys.forEach(key=>{
+                if(isEmpty(obj[key])){
+                    listaVacios.push(key);
+                }
+            });
+            return listaVacios;
+        }
         return {
             onRequest: onRequest
         };
