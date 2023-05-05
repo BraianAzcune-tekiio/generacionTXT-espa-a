@@ -4,8 +4,8 @@
  *@NModuleScope Public
  */
 
-define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/task", "N/url"],
-    function (record, search, runtime, log, serverWidget, task, urlModule) {
+define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/file", "N/render", "N/format"],
+    function (record, search, runtime, log, serverWidget, file, render, format) {
 
         // ! HARDCODE TIPO TXT USADO
         const TIPO_TXT_EMPLEADO = "303";
@@ -55,7 +55,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 if(context.request.method === "GET"){
                     construirFormulario303(form);
                 }else if(context.request.method === "POST"){
-                    generarTXT303(context);
+                    generarTXT303(context, form);
                 }else{
                     log.error(proceso, "context.request.method invalido= "+context.request.method);
                     throw {
@@ -393,11 +393,22 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
          * @return {{periodoFecha: Date, esTrimestre: boolean}}
          */
         function parsearPeriodo(recordPeriodo){
-            const fecha = recordPeriodo.getValue("startdate");
+            const fecha = new Date(recordPeriodo.getValue("startdate"));
+
             const esTrimestre = bool(recordPeriodo.getValue("isquarter"));
+            let trimestre = "";
+            if(esTrimestre){
+                const nombre = String(recordPeriodo.getValue("periodname"));
+                trimestre = nombre.replace(/.*Q([1-4]).*/,"$1");
+            }
             return {
-                periodoFecha: fecha,
-                esTrimestre: esTrimestre
+                periodoFecha: {
+                    yyyy: String(fecha.getFullYear()),
+                    MM: String(fecha.getMonth()+1),
+                    dd: String(fecha.getDay())
+                },
+                esTrimestre: esTrimestre,
+                trimestre: trimestre
             };
         }
 
@@ -413,13 +424,14 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
                 }
                 rta[campo] = valorCampo;
             }
-
+            // ! hardcodeado
+            rta.tipo_txt =TIPO_TXT_EMPLEADO;
             // cargar periodo y ejercicio
-            rta.periodo = record.load({
+
+            const periodoObj = parsearPeriodo(record.load({
                 type: "accountingperiod",
                 id: rta.periodo
-            });
-            const periodoObj = parsearPeriodo(rta.periodo);
+            }));
             // cargar los CODIGO TXT, para los campos records
             rta.tipoDeclaracion = record.load({
                 type: "customrecord_l34_tipo_declaracion",
@@ -457,7 +469,9 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
             const configuracion = {
                 internalid: "",
                 custrecord_l34_conf_gen_txt_nom_archivo: "",
-                custrecord_l34_conf_gen_txt_plantilla: ""
+                custrecord_l34_conf_gen_txt_plantilla: "",
+                custrecord_l34_conf_gen_txt_software_ver: "",
+                custrecord_l34_conf_gen_txt_nif_ed_sw: ""
             };
 
             const filtros = [
@@ -519,17 +533,6 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
             return nombre;
         }
 
-        function generarTXT303(context){
-            const camposFormulario = parsearCamposFormularios(context.request.parameters);
-            log.debug("prueba parsear", JSON.stringify(camposFormulario));
-            const configuracionObj = getConfiguracionTXT(camposFormulario.subsidiaria, TIPO_TXT_EMPLEADO);
-            log.debug("prueba parsear configuracionObj", JSON.stringify(configuracionObj));
-
-            const nombreArchivo = getNombreArchivo(configuracionObj.custrecord_l34_conf_gen_txt_nom_archivo, camposFormulario.nifDeclarante, new Date());
-            log.debug("nombre del archivo", nombreArchivo);
-        }
-
-
         function isEmpty(value) {
             if (value === "" || value === null || value === undefined)  return true;
             return false;
@@ -545,6 +548,56 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/ta
             });
             return listaVacios;
         }
+
+        function generarTXT303(context, form){
+            const camposFormulario = parsearCamposFormularios(context.request.parameters);
+            log.debug("generarTXT303 campos formularios", JSON.stringify(camposFormulario));
+            const configuracionObj = getConfiguracionTXT(camposFormulario.subsidiaria, camposFormulario.tipo_txt);
+            log.debug("generarTXT303 configuracionObj", JSON.stringify(configuracionObj));
+
+
+            const renderer = render.create();
+            const templateFile = file.load({
+                id: configuracionObj.custrecord_l34_conf_gen_txt_plantilla
+            });
+            renderer.templateContent = templateFile.getContents();
+            renderer.addCustomDataSource({
+                alias: "camposFormulario",
+                format: render.DataSource.OBJECT,
+                data: camposFormulario
+            });
+            renderer.addCustomDataSource({
+                alias: "configuracionObj",
+                format: render.DataSource.OBJECT,
+                data: configuracionObj
+            });
+            let stringTXT="";
+            try {
+                stringTXT = renderer.renderAsString();    
+            } catch (error) {
+                log.error("Error renderizando template", JSON.stringify(error));
+                throw {
+                    mostrarUsuario: true,
+                    mensaje: "Plantilla mal configurada contacte con el administrador"
+                };
+            }
+            
+            
+            log.debug("generarTXT303 stringTXT", stringTXT);
+            // ! debugging borrar despues
+            const myInlineHtml = form.addField({
+                id: "custpage_field_texto",
+                label: "Mensaje",
+                type: serverWidget.FieldType.INLINEHTML
+            });
+            myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
+            
+            
+            // const nombreArchivo = getNombreArchivo(configuracionObj.custrecord_l34_conf_gen_txt_nom_archivo, camposFormulario.nifDeclarante, new Date());
+            // log.debug("nombre del archivo", nombreArchivo);
+        }
+
+
         return {
             onRequest: onRequest
         };
