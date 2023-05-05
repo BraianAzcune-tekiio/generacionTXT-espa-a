@@ -414,7 +414,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
 
         function parsearCamposFormularios(parameters){
             // obtener valores
-            const rta = Object.assign({}, idCamposFormulario); 
+            const rta = Object.assign({}, idCamposFormulario);
 
             for(const campo of Object.keys(idCamposFormulario)){
                 const campoCustPage = idCamposFormulario[campo];
@@ -422,6 +422,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 if(esCheckBox(valorCampo)){
                     valorCampo = parsearCheckBoxParaTXT(valorCampo);
                 }
+                
                 rta[campo] = valorCampo;
             }
             // ! hardcodeado
@@ -453,9 +454,18 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 id: rta.existeVolumenOperaciones,
             }).getValue("custrecord_l34_existe_volumen_codigo_txt");
 
+            log.debug("fecha declaracion antes de parse", rta.fechaDeclaracion);
+            const fechaDeclaracionTemp = format.parse({value: rta.fechaDeclaracion, type: format.Type.DATE});
+            const fechaDeclaracion = {
+                yyyy: String(fechaDeclaracionTemp.getFullYear()),
+                MM: String(fechaDeclaracionTemp.getMonth()+1),
+                dd: String(fechaDeclaracionTemp.getDate())
+            };
+            log.debug("fecha declaracion parse", fechaDeclaracion);
             return {
                 ...rta,
-                periodoObj
+                periodoObj,
+                fechaDeclaracion
             };
         }
 
@@ -554,7 +564,6 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             log.debug("generarTXT303 campos formularios", JSON.stringify(camposFormulario));
             const configuracionObj = getConfiguracionTXT(camposFormulario.subsidiaria, camposFormulario.tipo_txt);
             log.debug("generarTXT303 configuracionObj", JSON.stringify(configuracionObj));
-
 
             const renderer = render.create();
             const templateFile = file.load({

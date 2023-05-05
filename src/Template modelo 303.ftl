@@ -34,7 +34,8 @@ ${camposFormulario.declaradoConcursoAcreedoresPresentePeriodo}<#rt>
 <#--  FIN pagina 1 DP30301  -->
 </T${camposFormulario.tipo_txt}0${ejercicio}${periodo}0000><#rt>
 
-
+FECHA DECLARACION=
+${camposFormulario.fechaDeclaracion.dd}/${camposFormulario.fechaDeclaracion.MM}/${camposFormulario.fechaDeclaracion.yyyy}
 
 
 <DEBUGGER>
