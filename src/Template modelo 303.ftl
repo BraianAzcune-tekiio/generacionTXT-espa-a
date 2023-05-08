@@ -29,13 +29,32 @@ ${camposFormulario.destinatarioOperacionCriterioCaja}<#rt>
 ${camposFormulario.opcionAplicacionProrrataEspecial}<#rt>
 ${camposFormulario.revocacionOpcionPorAplicacionProrrataEspecial}<#rt>
 ${camposFormulario.declaradoConcursoAcreedoresPresentePeriodo}<#rt>
+<#if camposFormulario.fechaDeclaracion.dd != "">
+${camposFormulario.fechaDeclaracion.dd?left_pad(2,"0")}${camposFormulario.fechaDeclaracion.MM?left_pad(2,"0")}${camposFormulario.fechaDeclaracion.yyyy}<#rt>
+<#else>
+${""?left_pad(8," ")}<#rt>
+</#if>
+${camposFormulario.autoDeclaracionConcursoDictadoEnPeriodo?left_pad(1," ")}<#rt>
+camposFormulario.sujetoPasivoAcogidoSII=${camposFormulario.sujetoPasivoAcogidoSII}<#rt>
+<#if ultimoMesOTrimestre>
+${camposFormulario.exoneradoResumenAnualIVA390}<#rt>
+<#else>
+0<#rt>
+</#if>
+<#if camposFormulario.existeVolumenOperaciones == "0" >
+0<#rt>
+<#else>
+<#if ultimoMesOTrimestre>0<#else>${camposFormulario.existeVolumenOperaciones}</#if><#rt>
+</#if>
+<Prueba>
+<Prueba>
+
+
 <#--  ${}<#rt>  -->
 <#--  FIN pagina 1 DP30301 HEADER-->
 <#--  FIN pagina 1 DP30301  -->
 </T${camposFormulario.tipo_txt}0${ejercicio}${periodo}0000><#rt>
 
-FECHA DECLARACION=
-${camposFormulario.fechaDeclaracion.dd}/${camposFormulario.fechaDeclaracion.MM}/${camposFormulario.fechaDeclaracion.yyyy}
 
 
 <DEBUGGER>

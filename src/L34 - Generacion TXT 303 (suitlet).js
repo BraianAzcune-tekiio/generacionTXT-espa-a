@@ -455,12 +455,20 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             }).getValue("custrecord_l34_existe_volumen_codigo_txt");
 
             log.debug("fecha declaracion antes de parse", rta.fechaDeclaracion);
-            const fechaDeclaracionTemp = format.parse({value: rta.fechaDeclaracion, type: format.Type.DATE});
-            const fechaDeclaracion = {
-                yyyy: String(fechaDeclaracionTemp.getFullYear()),
-                MM: String(fechaDeclaracionTemp.getMonth()+1),
-                dd: String(fechaDeclaracionTemp.getDate())
+            
+            let fechaDeclaracion = {
+                yyyy:"",
+                MM: "",
+                dd: ""
             };
+            if(!isEmpty(rta.fechaDeclaracion)){
+                const fechaDeclaracionTemp = format.parse({value: rta.fechaDeclaracion, type: format.Type.DATE});
+                fechaDeclaracion = {
+                    yyyy: String(fechaDeclaracionTemp.getFullYear()) ,
+                    MM: String(fechaDeclaracionTemp.getMonth()+1) ,
+                    dd: String(fechaDeclaracionTemp.getDate()) 
+                };
+            }
             log.debug("fecha declaracion parse", fechaDeclaracion);
             return {
                 ...rta,
