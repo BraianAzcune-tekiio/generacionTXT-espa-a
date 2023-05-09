@@ -8,7 +8,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
     function (record, search, runtime, log, serverWidget, file, render, format, url) {
 
         // ! HARDCODE TIPO TXT USADO
-        const TIPO_TXT_EMPLEADO = "303";
+        const TIPO_TXT_POR_DEFECTO = "303";
 
         /* global define */
         /***
@@ -48,7 +48,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             });
 
             const form = serverWidget.createForm({
-                title: "Panel de generación de TXT del Modelo "+TIPO_TXT_EMPLEADO
+                title: "Panel de generación de TXT del Modelo "+TIPO_TXT_POR_DEFECTO
             });
             form.clientScriptModulePath = "./L34 - Generacion TXT 303 (cliente).js";
             try {
@@ -142,11 +142,14 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                     const tipoTXT = form.addField({
                         id: idCamposFormulario.tipo_txt,
                         label: "Tipo TXT",
-                        type: "INLINEHTML",
-                        source: null,
-                        container: idTab
+                        type: "TEXT",
+                        container: idTab,
                     });
-                    tipoTXT.defaultValue = `<html><body><p>Tipo TXT: ${runtime.getCurrentScript().getParameter("custscript_l32_generacion_txt_tipo_txt")}</p></body></html>`;
+                    tipoTXT.defaultValue = TIPO_TXT_POR_DEFECTO;
+                    tipoTXT.updateDisplayType({
+                        displayType: serverWidget.FieldDisplayType.DISABLED
+                    });
+
                 }
                 function construirPeriodo(){
                     const periodo = form.addField({
@@ -425,8 +428,6 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 
                 rta[campo] = valorCampo;
             }
-            // ! hardcodeado
-            rta.tipo_txt =TIPO_TXT_EMPLEADO;
             // cargar periodo y ejercicio
 
             const periodoObj = parsearPeriodo(record.load({
@@ -508,7 +509,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             ];
             // cuidado netsuite muta lo que le envias, esta columnas no se pueden volver a usar
             let columnas = Object.keys(configuracion);
-            log.debug("prueba braian, columnas", JSON.stringify(columnas));
+
             const resultSet = search.create({
                 type: "customrecord_l34_conf_gen_txt",
                 filters: filtros,
@@ -601,26 +602,6 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             };
         }
 
-        function generarTXT303(context, form){
-            const camposFormulario = parsearCamposFormularios(context.request.parameters);
-            log.debug("generarTXT303 campos formularios", JSON.stringify(camposFormulario));
-            const configuracionObj = getConfiguracionTXT(camposFormulario.subsidiaria, camposFormulario.tipo_txt);
-            log.debug("generarTXT303 configuracionObj", JSON.stringify(configuracionObj));
-            
-            const stringTXT = renderizarTXT(configuracionObj, camposFormulario);
-            // ! funciona, comentado para no generar muchos.
-            // log.debug("generarTXT303 stringTXT", stringTXT);
-            // const fileId= generarArchivo(configuracionObj, camposFormulario, stringTXT);
-            // imprimirMensajeArchivoGenerado(form,fileId);
-            // * debugging borrar despues
-            const myInlineHtml = form.addField({
-                id: "custpage_field_texto",
-                label: "Mensaje",
-                type: serverWidget.FieldType.INLINEHTML
-            });
-            myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
-        }
-
         function renderizarTXT(configuracionObj, camposFormulario){
             const renderer = render.create();
             const templateFile = file.load({
@@ -686,6 +667,26 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             });
             
             myInlineHtml.defaultValue = `<html><body><p style="font-size: 2em;">Archivo generado <p/><a href="${fileObj.url}" download>Descargar archivo ${fileObj.name}</a></body></html>`;
+        }
+
+        function generarTXT303(context, form){
+            const camposFormulario = parsearCamposFormularios(context.request.parameters);
+            log.debug("generarTXT303 campos formularios", JSON.stringify(camposFormulario));
+            const configuracionObj = getConfiguracionTXT(camposFormulario.subsidiaria, camposFormulario.tipo_txt);
+            log.debug("generarTXT303 configuracionObj", JSON.stringify(configuracionObj));
+            
+            const stringTXT = renderizarTXT(configuracionObj, camposFormulario);
+            // ! funciona, comentado para no generar muchos.
+            // log.debug("generarTXT303 stringTXT", stringTXT);
+            // const fileId= generarArchivo(configuracionObj, camposFormulario, stringTXT);
+            // imprimirMensajeArchivoGenerado(form,fileId);
+            // * debugging borrar despues
+            const myInlineHtml = form.addField({
+                id: "custpage_field_texto",
+                label: "Mensaje",
+                type: serverWidget.FieldType.INLINEHTML
+            });
+            myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
         }
 
 

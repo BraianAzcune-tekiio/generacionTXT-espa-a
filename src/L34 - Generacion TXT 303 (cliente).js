@@ -4,8 +4,8 @@
  *@NModuleScope Public
  */
 
-define(["N/currentRecord", "N/search", "N/format", "N/record"],
-    function (currentRecord, search, format, record) {
+define(["N/log", "N/search"],
+    function (log, search) {
         /* global define */
         /***
          * Esto es compartido por el script de cliente, se define un objeto que contiene los id, para hacer facil copy paste y no fallar.
@@ -36,6 +36,74 @@ define(["N/currentRecord", "N/search", "N/format", "N/record"],
             informacionTributariaRazonTerritorioComun107: "custpage_informacion_tributaria_razon_territorio_comun_107"
         };
 
+
+        function fieldChanged(scriptContext){
+            // * poner campos en su valor por defecto
+            if(scriptContext.fieldId != idCamposFormulario.subsidiaria && scriptContext.fieldId != idCamposFormulario.tipo_txt) return;
+
+            const objRecord = scriptContext.currentRecord;
+            const subsidiaria = objRecord.getValue({fieldId: idCamposFormulario.subsidiaria});
+            const tipoTXT = objRecord.getValue({fieldId: idCamposFormulario.tipo_txt});
+
+            if(isEmpty(subsidiaria) || isEmpty(tipoTXT)) return;
+
+            const configuracionObj = getConfiguracionTXT(subsidiaria, tipoTXT);
+            if(isEmpty(configuracionObj)) return;
+
+            log.debug("configuracionObj ",JSON.stringify(configuracionObj));
+            // custrecord_l34_conf_gen_txt_subsidiaria;
+            
+            objRecord.setValue({
+                fieldId: idCamposFormulario.tipoDeclaracion,
+                value: configuracionObj.custrecord_l34_conf_gen_tipo_declaracion
+            });
+        }
+
+        function getConfiguracionTXT(subsidiaria, tipoTXT){
+            const configuracion = {
+                custrecord_l34_conf_gen_tipo_declaracion: ""
+            };
+
+            const filtros = [
+                { name: "isinactive", operator: "IS", values: false },
+                {
+                    name: "custrecord_l34_conf_gen_txt_subsidiaria",
+                    operator: "ANYOF",
+                    values: subsidiaria
+                },
+                {
+                    name: "custrecord_l34_conf_gen_txt_tipo_txt",
+                    operator: "IS", // ANYOF NO FUNCIONA SI ES DE TIPO TEXTO
+                    values: tipoTXT
+                },
+            ];
+            // cuidado netsuite muta lo que le envias, esta columnas no se pueden volver a usar
+            let columnas = Object.keys(configuracion);
+            
+            const resultSet = search.create({
+                type: "customrecord_l34_conf_gen_txt",
+                filters: filtros,
+                columns: columnas
+            }).run().getRange({start:0,end:1});
+
+            if(!resultSet || resultSet.length <= 0) return null;
+                
+            
+            const result = resultSet[0];
+            columnas = Object.keys(configuracion);
+            columnas.forEach(columna=>{
+                configuracion[columna] = result.getValue(columna);
+            });
+
+
+            return configuracion;
+        }
+        
+
+        function isEmpty(value) {
+            if (value === "" || value === null || value === undefined)  return true;
+            return false;
+        }
         function generarTXTModelo303(){
             // const objRecord = currentRecord.get();
 
@@ -49,8 +117,8 @@ define(["N/currentRecord", "N/search", "N/format", "N/record"],
             // alert("fecha= "+fechaDesde);
             return true;
         }
-
         return {
+            fieldChanged: fieldChanged,
             saveRecord: generarTXTModelo303,
         };
     });
