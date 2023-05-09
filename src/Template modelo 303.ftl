@@ -46,9 +46,31 @@ ${camposFormulario.exoneradoResumenAnualIVA390}<#rt>
 <#else>
 <#if ultimoMesOTrimestre>0<#else>${camposFormulario.existeVolumenOperaciones}</#if><#rt>
 </#if>
+<#--  ! ACA TOCA ITERAR, TODAVIA NO PORQUE PRUEBAS...  -->
+<#--  ! No hecho, rellenado con el padding correspondiente  -->
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [150]  -->
+${""?left_pad(17," ")}<#rt>
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [151]  -->
+${""?left_pad(5," ")}<#rt>
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [152]  -->
+${""?left_pad(17," ")}<#rt>
+<#--  ! No hecho, rellenado con el padding correspondiente  FIN-->
 <Prueba>
 <Prueba>
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [01]  -->
+<#--  <#assign base01 = camposFormulario.prueba?number?c?split(".")>
+<#assign base01_0 = base01[0]?left_pad(15, "0")>
+<#assign base01_1 = base01[1]?default("")?right_pad(2, "0")>
+baso01 0=${base01_0}
+baso01 1=${base01_1}  -->
+<#--  !hardcodeado, operaNo deberia venir de la SS pero no viene actualmente.  -->
+<#assign operaNo= "null">
+<#list ssTaxReportDetail.getTaxReportDetail as transaccion>
+<#if transaccion.taxrate == "4.0%" && (transaccion.type == "CustInvc" || transaccion.type == "CashSale")  && operaNo == "null">
+transaccion.amount=${transaccion.amount}
+</#if>
 
+</#list>
 
 <#--  ${}<#rt>  -->
 <#--  FIN pagina 1 DP30301 HEADER-->

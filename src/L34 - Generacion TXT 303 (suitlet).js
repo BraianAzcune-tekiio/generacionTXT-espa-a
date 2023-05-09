@@ -4,8 +4,8 @@
  *@NModuleScope Public
  */
 
-define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/file", "N/render", "N/format"],
-    function (record, search, runtime, log, serverWidget, file, render, format) {
+define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/file", "N/render", "N/format", "N/url"],
+    function (record, search, runtime, log, serverWidget, file, render, format, url) {
 
         // ! HARDCODE TIPO TXT USADO
         const TIPO_TXT_EMPLEADO = "303";
@@ -489,7 +489,8 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 custrecord_l34_conf_gen_txt_nom_archivo: "",
                 custrecord_l34_conf_gen_txt_plantilla: "",
                 custrecord_l34_conf_gen_txt_software_ver: "",
-                custrecord_l34_conf_gen_txt_nif_ed_sw: ""
+                custrecord_l34_conf_gen_txt_nif_ed_sw: "",
+                custrecord_l34_conf_gen_carpeta_txt: ""
             };
 
             const filtros = [
@@ -567,6 +568,39 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             return listaVacios;
         }
 
+        function getTaxReportDetail(){
+            const saveSearch = search.load({
+                id: "customsearchgenerictaxreportdetail"
+            });
+
+            const resultSet = saveSearch.run();
+
+            const searchResult = resultSet.getRange({
+                start: 0,
+                //! PREGUNTAR A SEBASTINA CANTIDAD MAXIMA,
+                end: 1000
+            });
+            if(isEmpty(searchResult) || searchResult.length == 0){
+                throw {
+                    mostrarUsuario: true,
+                    mensaje: "No se encotraron resultados del reporte de detalle de impuestos"
+                };
+            }
+            const rta = [];
+            const columnas = resultSet.columns;
+            log.debug("getTaxReportDetail", "columnas obtenidas= "+JSON.stringify(columnas.map(x=>({name:x.name, label: x.label}))));
+            for(let i = 0; i < searchResult.length ; i++){
+                rta[i] = {};
+                for(const col of columnas){
+                    rta[i][col.name] = searchResult[i].getValue({name: col});
+                }
+            }
+            log.debug("getTaxReportDetail", "rta= "+JSON.stringify(rta));
+            return {
+                getTaxReportDetail: rta
+            };
+        }
+
         function generarTXT303(context, form){
             const camposFormulario = parsearCamposFormularios(context.request.parameters);
             log.debug("generarTXT303 campos formularios", JSON.stringify(camposFormulario));
@@ -588,6 +622,13 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 format: render.DataSource.OBJECT,
                 data: configuracionObj
             });
+            const ssTaxReportDetail = getTaxReportDetail();
+            renderer.addCustomDataSource({
+                alias: "ssTaxReportDetail",
+                format: render.DataSource.OBJECT,
+                data: ssTaxReportDetail
+            });
+
             let stringTXT="";
             try {
                 stringTXT = renderer.renderAsString();    
@@ -601,17 +642,46 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             
             
             log.debug("generarTXT303 stringTXT", stringTXT);
-            // ! debugging borrar despues
+            
+            const nombreArchivo = getNombreArchivo(configuracionObj.custrecord_l34_conf_gen_txt_nom_archivo, camposFormulario.nifDeclarante, new Date());
+            log.debug("nombre del archivo", nombreArchivo);
+            
+            const fileObj = file.create({
+                name: nombreArchivo,
+                fileType: file.Type.PLAINTEXT,
+                contents: stringTXT,
+                folder: configuracionObj.custrecord_l34_conf_gen_carpeta_txt
+            });
+            const fileId = fileObj.save();
+
+            imprimirMensajeArchivoGenerado(form,fileId);
+            // // ! debugging borrar despues
+            // const myInlineHtml = form.addField({
+            //     id: "custpage_field_texto",
+            //     label: "Mensaje",
+            //     type: serverWidget.FieldType.INLINEHTML
+            // });
+            // myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
+            
+            
+        }
+
+        function imprimirMensajeArchivoGenerado(form,fileId){
+            // es necesario re cargarlo, para obtener la url actualizada.
+            const fileObj = file.load({id: fileId});
+            log.debug("imprimirMensajeArchivoGenerado", JSON.stringify({id_archivo:fileId, url:fileObj.url}));
             const myInlineHtml = form.addField({
                 id: "custpage_field_texto",
                 label: "Mensaje",
                 type: serverWidget.FieldType.INLINEHTML
             });
-            myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
             
+            const fileUrl = url.resolveDomain({
+                hostType: url.HostType.APPLICATION,
+                accountId: runtime.accountId,
+            });
             
-            // const nombreArchivo = getNombreArchivo(configuracionObj.custrecord_l34_conf_gen_txt_nom_archivo, camposFormulario.nifDeclarante, new Date());
-            // log.debug("nombre del archivo", nombreArchivo);
+            myInlineHtml.defaultValue = `<html><body><p style="font-size: 2em;">Archivo generado <p/><a href="${fileObj.url}" download>Descargar archivo ${fileObj.name}</a></body></html>`;
         }
 
 
