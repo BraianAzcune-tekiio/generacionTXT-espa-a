@@ -606,7 +606,22 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             log.debug("generarTXT303 campos formularios", JSON.stringify(camposFormulario));
             const configuracionObj = getConfiguracionTXT(camposFormulario.subsidiaria, camposFormulario.tipo_txt);
             log.debug("generarTXT303 configuracionObj", JSON.stringify(configuracionObj));
+            
+            const stringTXT = renderizarTXT(configuracionObj, camposFormulario);
+            // ! funciona, comentado para no generar muchos.
+            // log.debug("generarTXT303 stringTXT", stringTXT);
+            // const fileId= generarArchivo(configuracionObj, camposFormulario, stringTXT);
+            // imprimirMensajeArchivoGenerado(form,fileId);
+            // * debugging borrar despues
+            const myInlineHtml = form.addField({
+                id: "custpage_field_texto",
+                label: "Mensaje",
+                type: serverWidget.FieldType.INLINEHTML
+            });
+            myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
+        }
 
+        function renderizarTXT(configuracionObj, camposFormulario){
             const renderer = render.create();
             const templateFile = file.load({
                 id: configuracionObj.custrecord_l34_conf_gen_txt_plantilla
@@ -639,12 +654,11 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                     mensaje: "Plantilla mal configurada contacte con el administrador"
                 };
             }
-            
-            
-            log.debug("generarTXT303 stringTXT", stringTXT);
-            
+            return stringTXT;
+        }
+
+        function generarArchivo(configuracionObj, camposFormulario, stringTXT){
             const nombreArchivo = getNombreArchivo(configuracionObj.custrecord_l34_conf_gen_txt_nom_archivo, camposFormulario.nifDeclarante, new Date());
-            log.debug("nombre del archivo", nombreArchivo);
             
             const fileObj = file.create({
                 name: nombreArchivo,
@@ -653,17 +667,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 folder: configuracionObj.custrecord_l34_conf_gen_carpeta_txt
             });
             const fileId = fileObj.save();
-
-            imprimirMensajeArchivoGenerado(form,fileId);
-            // // ! debugging borrar despues
-            // const myInlineHtml = form.addField({
-            //     id: "custpage_field_texto",
-            //     label: "Mensaje",
-            //     type: serverWidget.FieldType.INLINEHTML
-            // });
-            // myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
-            
-            
+            return fileId;
         }
 
         function imprimirMensajeArchivoGenerado(form,fileId){
