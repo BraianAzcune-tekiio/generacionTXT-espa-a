@@ -245,6 +245,9 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                         container: idTab
                     });
                     razonSocial.isMandatory = true;
+                    razonSocial.setHelpText({
+                        help : "No coloque caracteres con tilde"
+                    });
                 }
                 function construirNifDeclarante(){
                     const nifDeclarante = form.addField({
@@ -254,6 +257,9 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                         container: idTab
                     });
                     nifDeclarante.isMandatory = true;
+                    nifDeclarante.setHelpText({
+                        help : "No coloque caracteres con tilde"
+                    });
                 }
                 function construirAutoDeclaracionConcursoDictadoEnPeriodo(){
                     const auto = form.addField({

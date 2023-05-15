@@ -4,8 +4,8 @@
  *@NModuleScope Public
  */
 
-define(["N/log", "N/search"],
-    function (log, search) {
+define(["N/log", "N/search", "N/ui/dialog"],
+    function (log, search, dialog) {
         /* global define */
         /***
          * Esto es compartido por el script de cliente, se define un objeto que contiene los id, para hacer facil copy paste y no fallar.
@@ -39,7 +39,33 @@ define(["N/log", "N/search"],
 
         function fieldChanged(scriptContext){
             // * poner campos en su valor por defecto
-            if(scriptContext.fieldId != idCamposFormulario.subsidiaria && scriptContext.fieldId != idCamposFormulario.tipo_txt) return;
+            if(scriptContext.fieldId == idCamposFormulario.subsidiaria || scriptContext.fieldId == idCamposFormulario.tipo_txt){
+                establecerValoresPorDefecto(scriptContext);
+            }else{
+                const valorEscrito = scriptContext.currentRecord.getValue({fieldId:scriptContext.fieldId});
+                if(typeof valorEscrito != "string") return;
+                if(checkLetrasNumerosYespaciosUnicamente(valorEscrito) == false){
+                    dialog.alert({
+                        title: "Campo mal formado",
+                        message: "El campo solo puede tener letras sin tildes, numeros, y espacios. Por favor corriga el campo"
+                    });
+                }
+            }            
+        }
+
+
+        function checkLetrasNumerosYespaciosUnicamente(valorEscrito){
+            const re = /^[a-z0-9 ]+$/gmi;
+            console.log(typeof valorEscrito);
+            if(!isEmpty(valorEscrito)){
+                const aceptable = re.test(valorEscrito);
+                return aceptable;
+            }
+            // si esta vacio, pasa bien.
+            return true;
+        }
+
+        function establecerValoresPorDefecto(scriptContext){
 
             const objRecord = scriptContext.currentRecord;
             const subsidiaria = objRecord.getValue({fieldId: idCamposFormulario.subsidiaria});
@@ -57,11 +83,36 @@ define(["N/log", "N/search"],
                 fieldId: idCamposFormulario.tipoDeclaracion,
                 value: configuracionObj.custrecord_l34_conf_gen_tipo_declaracion
             });
+            objRecord.setValue({
+                fieldId: idCamposFormulario.tributaExclusivamenteRegimenSimplificado,
+                value: configuracionObj.custrecord_l34_tributa_exc_regimen_simpl
+            });
+            objRecord.setValue({
+                fieldId: idCamposFormulario.autoDeclaracionConcursoDictadoEnPeriodo,
+                value: configuracionObj.custrecord_l34_auto_dec_con_dic_periodo
+            });
+            objRecord.setValue({
+                fieldId: idCamposFormulario.existeVolumenOperaciones,
+                value: configuracionObj.custrecord_l34_existe_volumen_operacion
+            });
+            objRecord.setValue({
+                fieldId: idCamposFormulario.razonSocial,
+                value: configuracionObj.custrecord_l34_razon_social_declarante
+            });
+            objRecord.setValue({
+                fieldId: idCamposFormulario.nifDeclarante,
+                value: configuracionObj.custrecord_l34_nif_declarante
+            });
         }
 
         function getConfiguracionTXT(subsidiaria, tipoTXT){
             const configuracion = {
-                custrecord_l34_conf_gen_tipo_declaracion: ""
+                custrecord_l34_conf_gen_tipo_declaracion: "",
+                custrecord_l34_tributa_exc_regimen_simpl: "",
+                custrecord_l34_auto_dec_con_dic_periodo: "",
+                custrecord_l34_existe_volumen_operacion: "",
+                custrecord_l34_razon_social_declarante: "",
+                custrecord_l34_nif_declarante: ""
             };
 
             const filtros = [
@@ -104,18 +155,26 @@ define(["N/log", "N/search"],
             if (value === "" || value === null || value === undefined)  return true;
             return false;
         }
-        function generarTXTModelo303(){
-            // const objRecord = currentRecord.get();
-
-            // alert("mensaje error= "+objRecord.getValue({
-            //     fieldId: idCamposFormulario.erro_texto
-            // }));
-            // //! prueba
-            // const fechaDesde = objRecord.getValue({
-            //     fieldId: "custpage_field_fdesde"
-            // });
-            // alert("fecha= "+fechaDesde);
-            return true;
+        function generarTXTModelo303(scriptContext){
+            const custPage = Object.values(idCamposFormulario);
+            const objRecord = scriptContext.currentRecord;
+            const listaNombreCamposMal = [];
+            for(const id of custPage){
+                const valorCampo = objRecord.getValue({fieldId:id});
+                if(typeof valorCampo != "string") continue;
+                if(checkLetrasNumerosYespaciosUnicamente(valorCampo) == false){
+                    listaNombreCamposMal.push(objRecord.getField({
+                        fieldId: id
+                    }).label);
+                }
+            }
+            if(listaNombreCamposMal.length > 0){
+                dialog.alert({
+                    title: "Error campos mal formados",
+                    message: "Los siguientes campos estan mal: "+JSON.stringify(listaNombreCamposMal)
+                });
+                return false;
+            }
         }
         return {
             fieldChanged: fieldChanged,
