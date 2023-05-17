@@ -175,6 +175,7 @@ define(["N/log", "N/search", "N/ui/dialog"],
                 });
                 return false;
             }
+            return true;
         }
         return {
             fieldChanged: fieldChanged,

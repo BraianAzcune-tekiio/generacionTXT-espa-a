@@ -2,10 +2,11 @@
  *@NApiVersion 2.1
  *@NScriptType Suitelet
  *@NModuleScope Public
+ *@NAmdConfig /SuiteScripts/configuration.json
  */
 
-define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/file", "N/render", "N/format", "N/url"],
-    function (record, search, runtime, log, serverWidget, file, render, format, url) {
+define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/file", "N/render", "N/format", "N/url"],
+    function (utilidades, record, search, runtime, log, serverWidget, file, render, format, url) {
 
         // ! HARDCODE TIPO TXT USADO
         const TIPO_TXT_POR_DEFECTO = "303";
@@ -41,6 +42,8 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
         };
 
         function onRequest(context){
+
+
             const proceso = "onRequest";
             log.audit({
                 title: proceso,
@@ -84,6 +87,17 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             context.response.writePage(form);
         }
 
+        function esOneWorld(){
+            let subsidiariesEnabled = false;
+            try {
+                search.lookupFields({ type: search.Type.EMPLOYEE, id: "-5", columns: ["subsidiary"] }).subsidiary;
+                subsidiariesEnabled = true;
+            } catch (e) {
+                subsidiariesEnabled = false;
+            }
+            log.debug("Subsidiary enabled: ", subsidiariesEnabled);
+        }
+
         function construirFormulario303(form){
             
             construirTabIdentificacion();
@@ -124,9 +138,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 construirInformacionTributariaRazonTerritorioComun107();
 
                 function construirSubsidiaria(){
-                    if(runtime.isFeatureInEffect({
-                        feature: "MULTISUBSIDIARYCUSTOMER"
-                    })){
+                    if(esOneWorld()){
                         const subsidiaria = form.addField({
                             id: idCamposFormulario.subsidiaria,
                             label: "Subsidiaria",
@@ -314,12 +326,16 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                     existeVolumen.isMandatory = true;
                 }
                 function construirTributacionExclusivamenteForal(){
-                    form.addField({
+                    const tributaForal =form.addField({
                         id: idCamposFormulario.tributacionExclusivamenteForal,
                         label: "Tributación exclusivamente foral",
                         type: "checkbox",
                         container: idTab
                     });
+                    tributaForal.updateDisplayType({
+                        displayType : serverWidget.FieldDisplayType.DISABLED
+                    });
+
                 }
                 function construirSujetoPasivoAcogidoSII(){
                     form.addField({
@@ -366,40 +382,13 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             if(s == "F" || s === false) return false;
             throw new Error("Este campo no es un booleano, para ser enviado"+JSON.stringify(s));
         }
-        /**
-         * Dado el recordType del periodo, devuelve un objeto con ejercicio, periodo, en el formato que se necesita para el TXT de España
-         * Ademas de una propiedad ultimoMesQ, que es true si estamos en el mes 12 o trimestre 4.
-         * @param {recordType id= accountingperiod} recordPeriodo 
-         * @returns {{ejercicio: string, periodo: string, ultimoMesQ: boolean}} - Un objeto con las siguientes propiedades:
-         *     - {string} ejercicio - El año fiscal del período.
-         *     - {string} periodo - El período, en formato "MM" para los períodos mensuales y "T1"-"T4" para los trimestrales.
-         *     - {boolean} ultimoMesQ - Verdadero si estamos en el último mes o trimestre del año fiscal.
-         */
-        function NOUSARparsearPeriodoEjercicio(recordPeriodo){
-            const fecha = recordPeriodo.getValue("startdate");
-            const ejercicio = fecha.getFullYear().toString();
-            let periodo = "";
-            let ultimoMesQ = false;
-            if(bool(recordPeriodo.getValue("isquarter"))){
-                // cambiar Q{numero} por T{numero}
-                const nombre = String(recordPeriodo.getValue("periodname"));
-                periodo = nombre.replace(/.*Q([1-4]).*/,"T$1");
-                ultimoMesQ = periodo === "T4";
-            }else{
-                periodo = String(fecha.getMonth()).padStart(2,"0");
-                ultimoMesQ = periodo === "12";
-            }
-            return {
-                ejercicio,
-                periodo,
-                ultimoMesQ
-            };
-        }
+
         /**
          * Probar mover logica a freemarker, este codigo recibe el recordType y devuelve
          * un objeto que tiene la fecha y si es quarter.
          * @param {recordType id= accountingperiod} recordPeriodo 
-         * @return {{periodoFecha: Date, esTrimestre: boolean}}
+         * @return {{esTrimestre: boolean, periodoFecha: Date,
+         * periodoFechaFin: Date}}
          */
         function parsearPeriodo(recordPeriodo){
             const fecha = new Date(recordPeriodo.getValue("startdate"));
@@ -410,14 +399,25 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 const nombre = String(recordPeriodo.getValue("periodname"));
                 trimestre = nombre.replace(/.*Q([1-4]).*/,"$1");
             }
+            const fechaFin = new Date(recordPeriodo.getValue("enddate"));
+
             return {
-                periodoFecha: {
-                    yyyy: String(fecha.getFullYear()),
-                    MM: String(fecha.getMonth()+1),
-                    dd: String(fecha.getDay())
-                },
+                periodoFecha: fecha,
+                periodoFechaFin: fechaFin,
                 esTrimestre: esTrimestre,
                 trimestre: trimestre
+            };
+        }
+        /**
+         * 
+         * @param {Date} date
+         * @return {{yyyy: String, MM: String, dd: String}}
+         */
+        function dateToyyyyMMdd(date){
+            return {
+                yyyy: String(date.getFullYear()),
+                MM: String(date.getMonth()+1),
+                dd: String(date.getDay())
             };
         }
 
@@ -468,7 +468,7 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 MM: "",
                 dd: ""
             };
-            if(!isEmpty(rta.fechaDeclaracion)){
+            if(!utilidades.isEmpty(rta.fechaDeclaracion)){
                 const fechaDeclaracionTemp = format.parse({value: rta.fechaDeclaracion, type: format.Type.DATE});
                 fechaDeclaracion = {
                     yyyy: String(fechaDeclaracionTemp.getFullYear()) ,
@@ -559,56 +559,70 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             return nombre;
         }
 
-        function isEmpty(value) {
-            if (value === "" || value === null || value === undefined)  return true;
-            return false;
-        }
-
         function getListaPropiedadesVacias(obj){
             const listaVacios = [];
             const keys = Object.keys(obj);
             keys.forEach(key=>{
-                if(isEmpty(obj[key])){
+                if(utilidades.isEmpty(obj[key])){
                     listaVacios.push(key);
                 }
             });
             return listaVacios;
         }
+        /**
+         * 
+         * @returns {any[]}
+         */
+        function getTaxReportDetailSS(camposFormulario){
+            const proceso = "getTaxReportDetail";
+            // ! CONSULTAR A SEBASTIAN, QUE FILTROS PONERLE A ESTA BUSQUEDA. tienen que ser los mismos que ejecutarBusqueda ?
+            const filtros = [];
+            // search.addFilter(new nlobjSearchFilter('custrecord_post_notional_tax_amount', 'taxitem', 'is', filtroAutorepercutido)); // donde filtroAutorepercutido esta hardcodeado en "T"
+            if(esOneWorld()){
+                filtros.push(search.createFilter({
+                    name: "subsidiary",
+                    operator: "ANYOF",
+                    values: camposFormulario.subsidiaria,
+                }));
+            }
+            filtros.push(search.createFilter({
+                name: "trandate",
+                operator: "WITHIN",
+                values: [camposFormulario.periodoObj.periodoFecha,
+                    camposFormulario.periodoObj.periodoFechaFin],
+            }));
+            
+            const objResultSet = utilidades.searchSavedPro("customsearchgenerictaxreportdetail", filtros);
 
-        function getTaxReportDetail(){
-            const saveSearch = search.load({
-                id: "customsearchgenerictaxreportdetail"
-            });
-
-            const resultSet = saveSearch.run();
-
-            const searchResult = resultSet.getRange({
-                start: 0,
-                //! PREGUNTAR A SEBASTINA CANTIDAD MAXIMA,
-                end: 1000
-            });
-            if(isEmpty(searchResult) || searchResult.length == 0){
+            if(objResultSet.error == true){
+                log.error(proceso,"entramos al error");
+                throw new Error(objResultSet.error);
+            }
+            
+            const resultSet = objResultSet.objRsponseFunction.result;
+            const resultSearch = objResultSet.objRsponseFunction.search;
+            log.audit(proceso, "cantidad de registros obtenidos= "+resultSet.length);
+            if(utilidades.isEmpty(resultSet) || resultSet.length <= 0){
+                log.error(proceso,"no hay registros");
                 throw {
                     mostrarUsuario: true,
                     mensaje: "No se encotraron resultados del reporte de detalle de impuestos"
                 };
             }
-            const rta = [];
-            const columnas = resultSet.columns;
+            const columnas = resultSearch.columns;
             log.debug("getTaxReportDetail", "columnas obtenidas= "+JSON.stringify(columnas.map(x=>({name:x.name, label: x.label}))));
-            for(let i = 0; i < searchResult.length ; i++){
-                rta[i] = {};
+            const rta = resultSet.map(results=>{
+                const obj = {};
                 for(const col of columnas){
-                    rta[i][col.name] = searchResult[i].getValue({name: col});
+                    obj[col.name] = results.getValue({ name: col });
                 }
-            }
-            log.debug("getTaxReportDetail", "rta= "+JSON.stringify(rta));
-            return {
-                getTaxReportDetail: rta
-            };
+                return obj;
+            });
+            
+            return rta;
         }
 
-        function renderizarTXT(configuracionObj, camposFormulario){
+        function renderizarTXT(configuracionObj, camposFormulario, taxReportDetail){
             const renderer = render.create();
             const templateFile = file.load({
                 id: configuracionObj.custrecord_l34_conf_gen_txt_plantilla
@@ -624,11 +638,11 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
                 format: render.DataSource.OBJECT,
                 data: configuracionObj
             });
-            const ssTaxReportDetail = getTaxReportDetail();
+            
             renderer.addCustomDataSource({
                 alias: "ssTaxReportDetail",
                 format: render.DataSource.OBJECT,
-                data: ssTaxReportDetail
+                data: taxReportDetail
             });
 
             let stringTXT="";
@@ -674,25 +688,313 @@ define(["N/record", "N/search", "N/runtime", "N/log", "N/ui/serverWidget", "N/fi
             
             myInlineHtml.defaultValue = `<html><body><p style="font-size: 2em;">Archivo generado <p/><a href="${fileObj.url}" download>Descargar archivo ${fileObj.name}</a></body></html>`;
         }
+        /**
+         * 
+         * @param {Object} taxReportDetailSS 
+         */
+        function calcularTaxReport(taxReportDetailSS){
+            const proceso = "POST calcularTaxReport";
+            // * CALCULO IVA DEVENGADO
+            //Devengado - Base e Impuestos 4% [01][03]
+            const baseEImpuesto4 = {
+                base4 : 0,
+                impuesto4: 0,
+                existeTasa: false,
+                tasa4: ""
+            };
+            //Devengado - Base e Impuestos 10% [04][06]
+            const baseEImpuesto10 = {
+                base10: 0,
+                impuesto10: 0,
+                existeTasa: false,
+                tasa10: ""
+            };    
+            //Devengado - Base e Impuestos 21% [07][09]
+            const baseEImpuesto21 = {
+                base21: 0,
+                impuesto21: 0,
+                existeTasa: false,
+                tasa21: ""
+            };
+            //Devengado - Otras operaciones con inversión del sujeto pasivo (excepto. adq. intracom) [12][13]
+            const baseEImpuesto12 = {
+                base12: 0,
+                impuesto13: 0,
+                existeTasa: false,
+                tasa12: ""
+            };
+            //Devengado - Modificación bases y cuotas [14][15]
+            const baseEImpuesto14 = {
+                base14: 0,
+                impuesto15: 0,
+                existeTasa: false,
+                tasa14: ""
+            };
+            //Devengado - Base e Impuestos 26% [16][17][18]
+            const baseEImpuestoRE = {
+                baseRE: 0,
+                impuestoRE5_2: 0,
+                existeTasa: false,
+                tasaRE: ""
+            };
+            //Adquisiciones Intracomunitarias [10][11][36][37]
+            const baseEImpuestoAdqIntra = {
+                baseAdqIntra: 0,
+                impuestoAdqIntra: 0,
+                // existeTasa: false,
+            };
+            const baseEImpuestoAdq = {
+                baseAdq : 0,
+                impuestoAdq: 0,
+                existeTasa: false,
+            };
+            //Deducible - Base Deducción [28][29]
+            const baseEImpuestoDeduccion = {
+                baseDed: 0,
+                impuestoDed: 0,
+                existeTasa: false,
+            };
+            // Importaciones Bienes Corrientes [32][33]
+            const baseEImpuestoBienes = {
+                baseBienes: 0,
+                impuestoBienes: 0,
+                existeTasa: false,
+            };
+            //Entregas Intracomunitarias [59]
+            let entregasIntracom = 0;
+            //Exportaciones y operaciones asimiladas [60]
+            let exportaciones = 0;
+            //Operaciones No Sujetas [61]
+            let operacionesNosujetas = 0;
+            //Operaciones Sujetas con Inversion del sujeto pasivo [122]
+            let operacionesSujetasISP= 0;
+            //IVA Bienes Inversion [30],[31],[34],[35],[38],[39]
+            const baseEImpuestoImportacionesBI = {
+                importacionesBIBase: 0,
+                importacionesBIImp:0,
+                existeTasa : false,
+            };
+            const baseEImpuestoIntracomunitariasBI = {
+                intracomunitariasBIBase: 0,
+                intracomunitariasBIImp: 0,
+                existeTasa : false,
+            };
+            const baseEImpuestoInterioresBI = {
+                interioresBIBase: 0,
+                interioresBIImp: 0,
+                existeTasa : false,
+            };
+            //Deducible - Rectificación de deducciones [40][41]
+            const baseEImpuestoRecDed = {
+                baseRecDed : 0,
+                impRecDed : 0,
+                existeTasa: false,
+            };
+
+            for(const obj of taxReportDetailSS){
+                // ! HARDCODEADO a la espera de que Nilce cree la columna (NO SUJETO)
+                const operaNo = null;
+                // ! cambiar nombre, de disp a tipoTransaccion.
+                const disp = obj["type"];
+                const tasaString = obj["taxrate"];
+                const tasa = parseFloat(tasaString.replace(/%/g, ""));
+
+                const baseImponible = parseFloat(obj["amount"]);
+                const cargoImpuestos = parseFloat(obj["taxamount"]);
+
+                // ! HARDCODEADO, los valores estan en la lista de ejemplo, pero no en el SS que hay que utilizar
+                /**
+                 * IMPORTACION
+                 * CODIGO CE
+                 * AUTOREPERCUTIDO 
+                 * IVA BIENES INMUEBLES 
+                 * APLICA AL SERVICIO 
+                 * IMPUESTO DERIVADO
+                 * EXPORTAR 
+                 */
+                const impor = bool("T");
+                const codCE = bool("T");
+                const autorepercutido = bool("T");
+                const bienesInv = bool("T");
+                const esServicio = bool("T");
+                const tasaParent = bool("T");
+                const exporta = bool("T");
+
+                // * todos los valores deben utilizar el parseFloat, y toFixed 2, con toString, para que el motor de la plantilla pueda separar por "."
+
+                //Devengado - Base e Impuestos 4% [01][03]
+                if ((tasa == 4 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)){
+                    baseEImpuesto4.existeTasa = true;
+                    baseEImpuesto4.tasa4 = tasa;
+                    baseEImpuesto4.base4 = (parseFloat(parseFloat(baseEImpuesto4.base4) + baseImponible).toFixed(2)).toString();
+                    baseEImpuesto4.base4 = (parseFloat(parseFloat(baseEImpuesto4.base4) + cargoImpuestos).toFixed(2)).toString();
+                }
+                //Devengado - Base e Impuestos 10% [04][06]
+                if ((tasa == 10 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)){
+                    baseEImpuesto10.existeTasa = true;
+                    baseEImpuesto10.tasa10 = tasa;
+                    baseEImpuesto10.base10 = (parseFloat(parseFloat(baseEImpuesto10.base10) + baseImponible).toFixed(2)).toString();
+                    baseEImpuesto10.impuesto10 = (parseFloat(parseFloat(baseEImpuesto10.impuesto10) + cargoImpuestos).toFixed(2)).toString();
+                }
+                //Devengado - Base e Impuestos 21% [07][09]
+                if ((tasa == 21 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)){
+                    baseEImpuesto21.existeTasa = true;
+                    baseEImpuesto21.tasa21 = tasa;
+                    baseEImpuesto21.base21 = (parseFloat(parseFloat(baseEImpuesto21.base21) + baseImponible).toFixed(2)).toString();
+                    baseEImpuesto21.impuesto21 = (parseFloat(parseFloat(baseEImpuesto21.impuesto21) + cargoImpuestos).toFixed(2)).toString();
+                }
+                //Devengado - Otras operaciones con inversión del sujeto pasivo (excepto. adq. intracom) [12][13]
+                if((
+                    (impor != true && codCE != true) && autorepercutido == true && bienesInv != true && 
+                    (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")
+                ) || (
+                    (impor == true && codCE != true) && autorepercutido == true && bienesInv != true && esServicio == true && 
+                    (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")
+                )){
+                    baseEImpuesto12.existeTasa = true;
+                    baseEImpuesto12.tasa12 = tasa;
+                    baseEImpuesto12.base12 = (parseFloat(parseFloat(baseEImpuesto12.base12) + baseImponible).toFixed(2)).toString();
+                    baseEImpuesto12.impuesto13 = (parseFloat(parseFloat(baseEImpuesto12.impuesto13) + cargoImpuestos).toFixed(2)).toString();
+                }
+                //Devengado - Modificación bases y cuotas [14][15]
+                if((disp == "CustCred" || disp == "CashRfnd")  && operaNo == null && (tasa == 10 || tasa == 4 || tasa == 21)){
+                    baseEImpuesto14.existeTasa = true;
+                    baseEImpuesto14.tasa14 = tasa;
+                    baseEImpuesto14.base14 = (parseFloat(parseFloat(baseEImpuesto14.base14) + baseImponible).toFixed(2)).toString();
+                    baseEImpuesto14.impuesto15 = (parseFloat(parseFloat(baseEImpuesto14.impuesto15) + cargoImpuestos).toFixed(2)).toString();
+                }
+                // ! en el codigo v1, se ve que utiliza base21, aunque esto esta con la tasa 26...
+                //Devengado - Base e Impuestos 26% [16][17][18]
+                if ((tasa == 26.20 && (disp == "CustInvc" || disp == "CashSale")) || (tasa == 26.20 && (disp == "CustCred" || disp == "CashRfnd"))){
+                    baseEImpuestoRE.existeTasa = true;
+                    baseEImpuestoRE.tasaRE = tasa;
+                    baseEImpuestoRE.baseRE = (parseFloat(parseFloat(baseEImpuestoRE.baseRE) + baseImponible).toFixed(2)).toString();
+
+                    baseEImpuesto21.existeTasa = true;
+                    baseEImpuesto21.tasa21 = tasa;
+                    baseEImpuesto21.base21 = (parseFloat(parseFloat(baseEImpuesto21.base21) + baseImponible).toFixed(2)).toString();
+
+                    //Calculamos Impuestos de Recargo de Equiivalencia para el 21% y el 5,2%
+                    baseEImpuestoRE.impuestoRE5_2 = (parseFloat(parseFloat(baseEImpuestoRE.impuestoRE5_2)+parseFloat(cargoImpuestos*parseFloat(-0.052))).toFixed(2)).toString();
+                    baseEImpuesto21.impuesto21 = (parseFloat(parseFloat(baseEImpuesto21.impuesto21)+parseFloat(cargoImpuestos*parseFloat(-0.21))).toFixed(2)).toString();
+                }
+                //Adquisiciones Intracomunitarias [10][11][36][37]
+                if (tasa == 0 && codCE == true && tasaParent > 0 && (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")){
+                    if(bienesInv == true){
+                        // ! las variables de este if, no se utilizan en el codigo v1, ni aqui tampoco, solo se calcula pero no se hace nada...
+                        baseEImpuestoAdqIntra.baseAdqIntra = (parseFloat(parseFloat(baseEImpuestoAdqIntra.baseAdqIntra) + baseImponible).toFixed(2)).toString();
+                        baseEImpuestoAdqIntra.impuestoAdqIntra = (parseFloat(parseFloat(baseEImpuestoAdqIntra.impuestoAdqIntra) + cargoImpuestos).toFixed(2)).toString();
+                    }else{
+                        baseEImpuestoAdq.existeTasa = true;
+                        baseEImpuestoAdq.baseAdq = (parseFloat(parseFloat(baseEImpuestoAdq.baseAdq) + baseImponible).toFixed(2)).toString();
+                        baseEImpuestoAdq.impuestoAdq = (parseFloat(parseFloat(baseEImpuestoAdq.impuestoAdq) + cargoImpuestos).toFixed(2)).toString();
+                    }
+                }
+                //Deducible - Base Deducción [28][29]
+                if (((tasa == 4 && (disp == "VendBill" || disp == "CardChrg") && bienesInv != true && impor != true) 
+                || (tasa == 10 && (disp == "VendBill" || disp == "CardChrg") && bienesInv != true && impor != true) 
+                || (tasa == 21 && (disp == "VendBill" || disp == "CardChrg") && bienesInv != true && impor != true)) 
+                || (codCE != true && autorepercutido == true && bienesInv != true && (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd"))){
+                    baseEImpuestoDeduccion.existeTasa = true;
+                    baseEImpuestoDeduccion.baseDed = (parseFloat(parseFloat(baseEImpuestoDeduccion.baseDed) + baseImponible).toFixed(2)).toString();
+                    baseEImpuestoDeduccion.impuestoDed = (parseFloat(parseFloat(baseEImpuestoDeduccion.impuestoDed) + cargoImpuestos).toFixed(2)).toString();
+                }
+                // Importaciones Bienes Corrientes [32][33]
+                if(impor == true && bienesInv != true && esServicio != true && (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")){
+                    baseEImpuestoBienes.existeTasa = true;
+                    baseEImpuestoBienes.baseBienes = (parseFloat(parseFloat(baseEImpuestoBienes.baseBienes) + baseImponible).toFixed(2)).toString();
+                    baseEImpuestoBienes.impuestoBienes = (parseFloat(parseFloat(baseEImpuestoBienes.impuestoBienes) + cargoImpuestos).toFixed(2)).toString();
+                }
+                //Entregas Intracomunitarias [59]
+                if(codCE == true && ((disp == "CustCred" || disp == "CashRfnd") || (disp == "CustInvc" || disp == "CashSale"))){
+                    entregasIntracom = (parseFloat(parseFloat(entregasIntracom) + parseFloat(baseImponible  * -1)).toFixed(2)).toString();
+                }
+                //Exportaciones y operaciones asimiladas [60]
+                if(exporta == true && ((disp == "CustCred" || disp == "CashRfnd") || (disp == "CustInvc" || disp == "CashSale"))){
+                    exportaciones = (parseFloat(parseFloat(exportaciones) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
+                }
+                //Operaciones No Sujetas [61]
+                if(operaNo != null &&  bienesInv != true && ((disp == "CustInvc" || disp == "CashSale") || (disp == "CustCred" || disp == "CashRfnd")) && exporta != true && codCE != true){
+                    operacionesNosujetas = (parseFloat(parseFloat(operacionesNosujetas) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
+                }
+                //Operaciones Sujetas con Inversion del sujeto pasivo [122]
+                if(operaNo == null &&  bienesInv != true && ((disp == "CustInvc" || disp == "CashSale") || (disp == "CustCred" || disp == "CashRfnd")) && exporta != true && codCE != true && autorepercutido == true){
+                    operacionesSujetasISP = (parseFloat(parseFloat(operacionesSujetasISP) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
+                }
+                //IVA Bienes Inversion [30],[31],[34],[35],[38],[39]
+                if(bienesInv == true && (disp == "VendBill" || disp == "CardChrg")){
+                    if(impor == true){
+                        //Bienes Inversión de Importaciones
+                        baseEImpuestoImportacionesBI.existeTasa = true;
+                        baseEImpuestoImportacionesBI.importacionesBIBase = (parseFloat(parseFloat(baseEImpuestoImportacionesBI.importacionesBIBase) + baseImponible).toFixed(2)).toString();
+                        baseEImpuestoImportacionesBI.importacionesBIImp = (parseFloat(parseFloat(baseEImpuestoImportacionesBI.importacionesBIImp) + cargoImpuestos).toFixed(2)).toString();
+                    } else if(codCE == true){
+                        baseEImpuestoIntracomunitariasBI.existeTasa = true;
+                        baseEImpuestoIntracomunitariasBI.intracomunitariasBIBase = (parseFloat(parseFloat(baseEImpuestoIntracomunitariasBI.intracomunitariasBIBase) + baseImponible).toFixed(2)).toString();
+                        baseEImpuestoIntracomunitariasBI.intracomunitariasBIImp = (parseFloat(parseFloat(baseEImpuestoIntracomunitariasBI.intracomunitariasBIImp) + cargoImpuestos).toFixed(2)).toString();
+                    }else{
+                        baseEImpuestoInterioresBI.existeTasa = true;
+                        baseEImpuestoInterioresBI.interioresBIBase = (parseFloat(parseFloat(baseEImpuestoInterioresBI.interioresBIBase) + baseImponible).toFixed(2)).toString();
+                        baseEImpuestoInterioresBI.interioresBIImp = (parseFloat(parseFloat(baseEImpuestoInterioresBI.interioresBIImp) + cargoImpuestos).toFixed(2)).toString();
+                    }
+                }
+                //Deducible - Rectificación de deducciones [40][41]
+                if (((tasa == 4 && (disp == "VendCred" || disp == "CardRfnd")) || (tasa == 10 && (disp == "VendCred" || disp == "CardRfnd")) || (tasa == 21 && (disp == "VendCred" || disp == "CardRfnd"))) || ((disp == "VendCred" || disp == "CardRfnd") && impor == "T" && codCE != "T" && autorepercutido != "T")){
+                    baseEImpuestoRecDed.existeTasa = true;
+                    baseEImpuestoRecDed.baseRecDed = (parseFloat(parseFloat(baseEImpuestoRecDed.baseRecDed) + baseImponible).toFixed(2)).toString();
+                    baseEImpuestoRecDed.impRecDed = (parseFloat(parseFloat(baseEImpuestoRecDed.impRecDed) + parseFloat(cargoImpuestos * -1)).toFixed(2)).toString();
+                }
+            }
+
+            return {
+                baseEImpuesto4,
+                baseEImpuesto10,
+                baseEImpuesto21,
+                baseEImpuesto12,
+                baseEImpuesto14,
+                baseEImpuestoRE,
+                baseEImpuestoAdqIntra,
+                baseEImpuestoAdq,
+                baseEImpuestoDeduccion,
+                baseEImpuestoBienes,
+                entregasIntracom,
+                exportaciones,
+                operacionesNosujetas,
+                operacionesSujetasISP,
+                baseEImpuestoImportacionesBI,
+                baseEImpuestoIntracomunitariasBI,
+                baseEImpuestoInterioresBI,
+                baseEImpuestoRecDed,
+            };
+        }
 
         function generarTXT303(context, form){
+            const proceso = "POST generarTXT303";
+            const currentScript = runtime.getCurrentScript();
+            log.audit(proceso, "Unidades Disponibles :" + currentScript.getRemainingUsage());
+            
             const camposFormulario = parsearCamposFormularios(context.request.parameters);
             log.debug("generarTXT303 campos formularios", JSON.stringify(camposFormulario));
             const configuracionObj = getConfiguracionTXT(camposFormulario.subsidiaria, camposFormulario.tipo_txt);
             log.debug("generarTXT303 configuracionObj", JSON.stringify(configuracionObj));
             
-            const stringTXT = renderizarTXT(configuracionObj, camposFormulario);
-            // ! funciona, comentado para no generar muchos.
-            // log.debug("generarTXT303 stringTXT", stringTXT);
-            // const fileId= generarArchivo(configuracionObj, camposFormulario, stringTXT);
-            // imprimirMensajeArchivoGenerado(form,fileId);
-            // * debugging borrar despues
-            const myInlineHtml = form.addField({
-                id: "custpage_field_texto",
-                label: "Mensaje",
-                type: serverWidget.FieldType.INLINEHTML
-            });
-            myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
+            const taxReportDetailSS = getTaxReportDetailSS(camposFormulario);
+            log.audit(proceso, "Unidades Disponibles :" + currentScript.getRemainingUsage());
+            const taxReportDetail = calcularTaxReport(taxReportDetailSS);
+
+
+            // const stringTXT = renderizarTXT(configuracionObj, camposFormulario, taxReportDetail);
+            // // ! funciona, comentado para no generar muchos.
+            // // log.debug("generarTXT303 stringTXT", stringTXT);
+            // // const fileId= generarArchivo(configuracionObj, camposFormulario, stringTXT);
+            // // imprimirMensajeArchivoGenerado(form,fileId);
+            // // * debugging borrar despues
+            // const myInlineHtml = form.addField({
+            //     id: "custpage_field_texto",
+            //     label: "Mensaje",
+            //     type: serverWidget.FieldType.INLINEHTML
+            // });
+            // myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
         }
 
 
