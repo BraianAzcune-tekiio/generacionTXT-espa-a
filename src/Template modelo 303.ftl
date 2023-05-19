@@ -46,39 +46,93 @@ ${camposFormulario.exoneradoResumenAnualIVA390}<#rt>
 <#else>
 <#if ultimoMesOTrimestre>0<#else>${camposFormulario.existeVolumenOperaciones}</#if><#rt>
 </#if>
-<#--  ! ACA TOCA ITERAR, TODAVIA NO PORQUE PRUEBAS...  -->
 <#--  ! No hecho, rellenado con el padding correspondiente  -->
 <#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [150]  -->
-${""?left_pad(17," ")}<#rt>
+${""?left_pad(17,"0")}<#rt>
 <#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [151]  -->
-${""?left_pad(5," ")}<#rt>
+${""?left_pad(5,"0")}<#rt>
 <#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [152]  -->
-${""?left_pad(17," ")}<#rt>
-<#--  ! No hecho, rellenado con el padding correspondiente  FIN-->
-<Prueba>
-<Prueba>
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [01]  -->
-<#--  <#assign base01 = camposFormulario.prueba?number?c?split(".")>
-<#assign base01_0 = base01[0]?left_pad(15, "0")>
-<#assign base01_1 = base01[1]?default("")?right_pad(2, "0")>
-baso01 0=${base01_0}
-baso01 1=${base01_1}  -->
-<#--  !hardcodeado, operaNo deberia venir de la SS pero no viene actualmente.  -->
-<#assign operaNo= "null">
-<#list ssTaxReportDetail.getTaxReportDetail as transaccion>
-<#if transaccion.taxrate == "4.0%" && (transaccion.type == "CustInvc" || transaccion.type == "CashSale")  && operaNo == "null">
-transaccion.amount=${transaccion.amount}
+${""?left_pad(17,"0")}<#rt>
+<#--  ! FIN No hecho, rellenado con el padding correspondiente  -->
+
+<PRUEBA[01][02][03]>
+<#if taxReportDetail.baseEImpuesto4.existeTasa == "true">
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [01]>
+
+<#--  * por codigo se garantiza que existe el "." para separar y que se tiene dos decimales  -->
+${taxReportDetail.baseEImpuesto4.base4?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto4.base4?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [01]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [02]>
+
+<#--  * por codigo se garantiza que existe el "." para separar y que se tiene dos decimales  -->
+${taxReportDetail.baseEImpuesto4.tasa4?split(".")[0]?left_pad(3, "0")}<#rt>
+${taxReportDetail.baseEImpuesto4.tasa4?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [02]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [03]>
+
+${taxReportDetail.baseEImpuesto4.impuesto4?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto4.impuesto4?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [03]>
+
+<#else>
+<#--  [01]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [02]  -->
+${""?left_pad(5,"0")}<#rt>
+<#--  [03]  -->
+${""?left_pad(17,"0")}<#rt>
 </#if>
+</PRUEBA[01][02][03]>
 
-</#list>
+<#--  ! No hecho, rellenado con el padding correspondiente  -->
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [153]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [154]  -->
+${""?left_pad(5,"0")}<#rt>
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [155]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  ! FIN No hecho, rellenado con el padding correspondiente  -->
 
-<#--  ${}<#rt>  -->
-<#--  FIN pagina 1 DP30301 HEADER-->
-<#--  FIN pagina 1 DP30301  -->
-</T${camposFormulario.tipo_txt}0${ejercicio}${periodo}0000><#rt>
+<PRUEBA[04][05][06]>
+<#if taxReportDetail.baseEImpuesto10.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [04]>
 
+${taxReportDetail.baseEImpuesto10.base10?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto10.base10?split(".")[1]}<#rt>
 
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [04]>
 
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [05]>
+
+${taxReportDetail.baseEImpuesto10.tasa10?split(".")[0]?left_pad(3, "0")}<#rt>
+${taxReportDetail.baseEImpuesto10.tasa10?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [05]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [06]>
+
+${taxReportDetail.baseEImpuesto10.impuesto10?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto10.impuesto10?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [06]>
+
+<#else>
+<#--  [04]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [05]  -->
+${""?left_pad(5,"0")}<#rt>
+<#--  [06]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[04][05][06]>
+<#--  
 <DEBUGGER>
 ejercicio=${ejercicio}
 mes=${mes}
@@ -99,4 +153,5 @@ periodo=${periodo}
 <#if ultimoMesOTrimestre>
     estamos en el ultimo mes o en el ultimo trimestre
 </#if>
-</DEBUGGER>
+</DEBUGGER>  -->
+</T${camposFormulario.tipo_txt}0${ejercicio}${periodo}0000><#rt>

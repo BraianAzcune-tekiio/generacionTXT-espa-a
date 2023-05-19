@@ -96,6 +96,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 subsidiariesEnabled = false;
             }
             log.debug("Subsidiary enabled: ", subsidiariesEnabled);
+            return subsidiariesEnabled;
         }
 
         function construirFormulario303(form){
@@ -138,7 +139,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 construirInformacionTributariaRazonTerritorioComun107();
 
                 function construirSubsidiaria(){
-                    if(esOneWorld()){
+                    if(esOneWorld() == true){
                         const subsidiaria = form.addField({
                             id: idCamposFormulario.subsidiaria,
                             label: "Subsidiaria",
@@ -391,7 +392,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
          * periodoFechaFin: Date}}
          */
         function parsearPeriodo(recordPeriodo){
-            const fecha = new Date(recordPeriodo.getValue("startdate"));
+            const fecha = recordPeriodo.getValue("startdate");
 
             const esTrimestre = bool(recordPeriodo.getValue("isquarter"));
             let trimestre = "";
@@ -399,7 +400,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 const nombre = String(recordPeriodo.getValue("periodname"));
                 trimestre = nombre.replace(/.*Q([1-4]).*/,"$1");
             }
-            const fechaFin = new Date(recordPeriodo.getValue("enddate"));
+            const fechaFin = recordPeriodo.getValue("enddate");
 
             return {
                 periodoFecha: fecha,
@@ -408,6 +409,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 trimestre: trimestre
             };
         }
+
         /**
          * 
          * @param {Date} date
@@ -575,22 +577,31 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
          */
         function getTaxReportDetailSS(camposFormulario){
             const proceso = "getTaxReportDetail";
-            // ! CONSULTAR A SEBASTIAN, QUE FILTROS PONERLE A ESTA BUSQUEDA. tienen que ser los mismos que ejecutarBusqueda ?
             const filtros = [];
-            // search.addFilter(new nlobjSearchFilter('custrecord_post_notional_tax_amount', 'taxitem', 'is', filtroAutorepercutido)); // donde filtroAutorepercutido esta hardcodeado en "T"
-            if(esOneWorld()){
-                filtros.push(search.createFilter({
+            // ! CONSULTAR A SEBASTIAN, QUE FILTROS PONERLE A ESTA BUSQUEDA. tienen que ser los mismos que ejecutarBusqueda ?
+            // ! search.addFilter(new nlobjSearchFilter('custrecord_post_notional_tax_amount', 'taxitem', 'is', filtroAutorepercutido)); // donde filtroAutorepercutido esta hardcodeado en "T"
+            if(esOneWorld() == true){
+                filtros.push({
                     name: "subsidiary",
                     operator: "ANYOF",
                     values: camposFormulario.subsidiaria,
-                }));
+                });
             }
-            filtros.push(search.createFilter({
+            const fechaInicio = format.format({
+                value: camposFormulario.periodoObj.periodoFecha,
+                type: format.Type.DATE
+            });
+            const fechaFin = format.format({
+                value: camposFormulario.periodoObj.periodoFechaFin,
+                type: format.Type.DATE
+            });
+            log.debug(proceso, "buscar entre "+fechaInicio+ " - "+fechaFin);
+            filtros.push({
                 name: "trandate",
                 operator: "WITHIN",
-                values: [camposFormulario.periodoObj.periodoFecha,
-                    camposFormulario.periodoObj.periodoFechaFin],
-            }));
+                values: [fechaInicio,fechaFin],
+            });
+            
             
             const objResultSet = utilidades.searchSavedPro("customsearchgenerictaxreportdetail", filtros);
 
@@ -640,7 +651,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
             });
             
             renderer.addCustomDataSource({
-                alias: "ssTaxReportDetail",
+                alias: "taxReportDetail",
                 format: render.DataSource.OBJECT,
                 data: taxReportDetail
             });
@@ -791,13 +802,12 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 existeTasa: false,
             };
 
-            for(const obj of taxReportDetailSS){
-                // ! HARDCODEADO a la espera de que Nilce cree la columna (NO SUJETO)
-                const operaNo = null;
+            for(const obj of taxReportDetailSS){                
                 // ! cambiar nombre, de disp a tipoTransaccion.
                 const disp = obj["type"];
-                const tasaString = obj["taxrate"];
+                let tasaString = obj["taxrate"];
                 const tasa = parseFloat(tasaString.replace(/%/g, ""));
+                tasaString = tasa.toFixed(2).toString();
 
                 const baseImponible = parseFloat(obj["amount"]);
                 const cargoImpuestos = parseFloat(obj["taxamount"]);
@@ -811,6 +821,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                  * APLICA AL SERVICIO 
                  * IMPUESTO DERIVADO
                  * EXPORTAR 
+                 * NO SUJETO
                  */
                 const impor = bool("T");
                 const codCE = bool("T");
@@ -819,27 +830,28 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 const esServicio = bool("T");
                 const tasaParent = bool("T");
                 const exporta = bool("T");
+                const operaNo = null;
 
                 // * todos los valores deben utilizar el parseFloat, y toFixed 2, con toString, para que el motor de la plantilla pueda separar por "."
 
                 //Devengado - Base e Impuestos 4% [01][03]
                 if ((tasa == 4 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)){
                     baseEImpuesto4.existeTasa = true;
-                    baseEImpuesto4.tasa4 = tasa;
+                    baseEImpuesto4.tasa4 = tasaString;
                     baseEImpuesto4.base4 = (parseFloat(parseFloat(baseEImpuesto4.base4) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto4.base4 = (parseFloat(parseFloat(baseEImpuesto4.base4) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Devengado - Base e Impuestos 10% [04][06]
                 if ((tasa == 10 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)){
                     baseEImpuesto10.existeTasa = true;
-                    baseEImpuesto10.tasa10 = tasa;
+                    baseEImpuesto10.tasa10 = tasaString;
                     baseEImpuesto10.base10 = (parseFloat(parseFloat(baseEImpuesto10.base10) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto10.impuesto10 = (parseFloat(parseFloat(baseEImpuesto10.impuesto10) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Devengado - Base e Impuestos 21% [07][09]
                 if ((tasa == 21 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)){
                     baseEImpuesto21.existeTasa = true;
-                    baseEImpuesto21.tasa21 = tasa;
+                    baseEImpuesto21.tasa21 = tasaString;
                     baseEImpuesto21.base21 = (parseFloat(parseFloat(baseEImpuesto21.base21) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto21.impuesto21 = (parseFloat(parseFloat(baseEImpuesto21.impuesto21) + cargoImpuestos).toFixed(2)).toString();
                 }
@@ -852,14 +864,14 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                     (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")
                 )){
                     baseEImpuesto12.existeTasa = true;
-                    baseEImpuesto12.tasa12 = tasa;
+                    baseEImpuesto12.tasa12 = tasaString;
                     baseEImpuesto12.base12 = (parseFloat(parseFloat(baseEImpuesto12.base12) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto12.impuesto13 = (parseFloat(parseFloat(baseEImpuesto12.impuesto13) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Devengado - Modificación bases y cuotas [14][15]
                 if((disp == "CustCred" || disp == "CashRfnd")  && operaNo == null && (tasa == 10 || tasa == 4 || tasa == 21)){
                     baseEImpuesto14.existeTasa = true;
-                    baseEImpuesto14.tasa14 = tasa;
+                    baseEImpuesto14.tasa14 = tasaString;
                     baseEImpuesto14.base14 = (parseFloat(parseFloat(baseEImpuesto14.base14) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto14.impuesto15 = (parseFloat(parseFloat(baseEImpuesto14.impuesto15) + cargoImpuestos).toFixed(2)).toString();
                 }
@@ -867,15 +879,17 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 //Devengado - Base e Impuestos 26% [16][17][18]
                 if ((tasa == 26.20 && (disp == "CustInvc" || disp == "CashSale")) || (tasa == 26.20 && (disp == "CustCred" || disp == "CashRfnd"))){
                     baseEImpuestoRE.existeTasa = true;
-                    baseEImpuestoRE.tasaRE = tasa;
+                    baseEImpuestoRE.tasaRE = tasaString;
                     baseEImpuestoRE.baseRE = (parseFloat(parseFloat(baseEImpuestoRE.baseRE) + baseImponible).toFixed(2)).toString();
 
                     baseEImpuesto21.existeTasa = true;
-                    baseEImpuesto21.tasa21 = tasa;
+                    baseEImpuesto21.tasa21 = tasaString;
                     baseEImpuesto21.base21 = (parseFloat(parseFloat(baseEImpuesto21.base21) + baseImponible).toFixed(2)).toString();
 
                     //Calculamos Impuestos de Recargo de Equiivalencia para el 21% y el 5,2%
+                    // ! se multiplica por -0.052
                     baseEImpuestoRE.impuestoRE5_2 = (parseFloat(parseFloat(baseEImpuestoRE.impuestoRE5_2)+parseFloat(cargoImpuestos*parseFloat(-0.052))).toFixed(2)).toString();
+                    // ! se multiplica por -0.21
                     baseEImpuesto21.impuesto21 = (parseFloat(parseFloat(baseEImpuesto21.impuesto21)+parseFloat(cargoImpuestos*parseFloat(-0.21))).toFixed(2)).toString();
                 }
                 //Adquisiciones Intracomunitarias [10][11][36][37]
@@ -907,18 +921,22 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 }
                 //Entregas Intracomunitarias [59]
                 if(codCE == true && ((disp == "CustCred" || disp == "CashRfnd") || (disp == "CustInvc" || disp == "CashSale"))){
+                    // ! se multiplica por -1
                     entregasIntracom = (parseFloat(parseFloat(entregasIntracom) + parseFloat(baseImponible  * -1)).toFixed(2)).toString();
                 }
                 //Exportaciones y operaciones asimiladas [60]
                 if(exporta == true && ((disp == "CustCred" || disp == "CashRfnd") || (disp == "CustInvc" || disp == "CashSale"))){
+                    // ! se multiplica por -1
                     exportaciones = (parseFloat(parseFloat(exportaciones) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
                 }
                 //Operaciones No Sujetas [61]
                 if(operaNo != null &&  bienesInv != true && ((disp == "CustInvc" || disp == "CashSale") || (disp == "CustCred" || disp == "CashRfnd")) && exporta != true && codCE != true){
+                    // ! se multiplica por -1
                     operacionesNosujetas = (parseFloat(parseFloat(operacionesNosujetas) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
                 }
                 //Operaciones Sujetas con Inversion del sujeto pasivo [122]
                 if(operaNo == null &&  bienesInv != true && ((disp == "CustInvc" || disp == "CashSale") || (disp == "CustCred" || disp == "CashRfnd")) && exporta != true && codCE != true && autorepercutido == true){
+                    // ! se multiplica por -1
                     operacionesSujetasISP = (parseFloat(parseFloat(operacionesSujetasISP) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
                 }
                 //IVA Bienes Inversion [30],[31],[34],[35],[38],[39]
@@ -942,6 +960,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 if (((tasa == 4 && (disp == "VendCred" || disp == "CardRfnd")) || (tasa == 10 && (disp == "VendCred" || disp == "CardRfnd")) || (tasa == 21 && (disp == "VendCred" || disp == "CardRfnd"))) || ((disp == "VendCred" || disp == "CardRfnd") && impor == "T" && codCE != "T" && autorepercutido != "T")){
                     baseEImpuestoRecDed.existeTasa = true;
                     baseEImpuestoRecDed.baseRecDed = (parseFloat(parseFloat(baseEImpuestoRecDed.baseRecDed) + baseImponible).toFixed(2)).toString();
+                    // ! se multiplica por -1
                     baseEImpuestoRecDed.impRecDed = (parseFloat(parseFloat(baseEImpuestoRecDed.impRecDed) + parseFloat(cargoImpuestos * -1)).toFixed(2)).toString();
                 }
             }
@@ -981,20 +1000,25 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
             const taxReportDetailSS = getTaxReportDetailSS(camposFormulario);
             log.audit(proceso, "Unidades Disponibles :" + currentScript.getRemainingUsage());
             const taxReportDetail = calcularTaxReport(taxReportDetailSS);
+            // ! prueba
+            taxReportDetail.baseEImpuesto10.existeTasa = true;
+            taxReportDetail.baseEImpuesto10.base10 = "-23.00";
+            taxReportDetail.baseEImpuesto10.tasa10 = "10.00";
+            taxReportDetail.baseEImpuesto10.impuesto10 = "2.00";
+            //! fin prueba
 
-
-            // const stringTXT = renderizarTXT(configuracionObj, camposFormulario, taxReportDetail);
-            // // ! funciona, comentado para no generar muchos.
-            // // log.debug("generarTXT303 stringTXT", stringTXT);
-            // // const fileId= generarArchivo(configuracionObj, camposFormulario, stringTXT);
-            // // imprimirMensajeArchivoGenerado(form,fileId);
-            // // * debugging borrar despues
-            // const myInlineHtml = form.addField({
-            //     id: "custpage_field_texto",
-            //     label: "Mensaje",
-            //     type: serverWidget.FieldType.INLINEHTML
-            // });
-            // myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
+            const stringTXT = renderizarTXT(configuracionObj, camposFormulario, taxReportDetail);
+            // ! funciona, comentado para no generar muchos.
+            // log.debug("generarTXT303 stringTXT", stringTXT);
+            // const fileId= generarArchivo(configuracionObj, camposFormulario, stringTXT);
+            // imprimirMensajeArchivoGenerado(form,fileId);
+            // * debugging borrar despues
+            const myInlineHtml = form.addField({
+                id: "custpage_field_texto",
+                label: "Mensaje",
+                type: serverWidget.FieldType.INLINEHTML
+            });
+            myInlineHtml.defaultValue = `<html><body><pre style="font-size: 2em;"> ${stringTXT.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} </pre></body></html>`;
         }
 
 
