@@ -132,6 +132,189 @@ ${""?left_pad(5,"0")}<#rt>
 ${""?left_pad(17,"0")}<#rt>
 </#if>
 </PRUEBA[04][05][06]>
+
+
+<PRUEBA[07][08][09]
+<#if taxReportDetail.baseEImpuesto21.existeTasa == "true">
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [07]>
+
+${taxReportDetail.baseEImpuesto21.base21?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto21.base21?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [07]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [08]>
+
+${taxReportDetail.baseEImpuesto21.tasa21?split(".")[0]?left_pad(3, "0")}<#rt>
+${taxReportDetail.baseEImpuesto21.tasa21?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [08]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [09]>
+
+${taxReportDetail.baseEImpuesto21.impuesto21?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto21.impuesto21?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [09]>
+<#else>
+<#--  [07]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [08]  -->
+${""?left_pad(5,"0")}<#rt>
+<#--  [09]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[07][08][09]
+
+<PRUEBA[10][11]>
+<#if taxReportDetail.baseEImpuestoAdq.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Adquisiciones intracomunitarias de bienes y servicios - Base imponible  [10]>
+
+${taxReportDetail.baseEImpuestoAdq.baseAdq?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoAdq.baseAdq?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Adquisiciones intracomunitarias de bienes y servicios - Base imponible  [10]>
+
+<Liquidación (3) - Regimen General - IVA Devengado - Adquisiciones intracomunitarias de bienes y servicios - Cuota [11]>
+
+${taxReportDetail.baseEImpuestoAdq.impuestoAdq?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoAdq.impuestoAdq?split(".")[1]}<#rt>
+
+</Liquidación (3) - Regimen General - IVA Devengado - Adquisiciones intracomunitarias de bienes y servicios - Cuota [11]>
+
+<#else>
+<#--  [10]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [11]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[10][11]>
+
+<PRUEBA[12][13]>
+<#if taxReportDetail.baseEImpuesto12.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Otras operaciones con inversión del sujeto pasivo (excepto. adq. intracom) - Base imponible  [12]>
+
+${taxReportDetail.baseEImpuesto12.base12?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto12.base12?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Otras operaciones con inversión del sujeto pasivo (excepto. adq. intracom) - Base imponible  [12]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Otras operaciones con inversión del sujeto pasivo (excepto. adq. intracom) - Cuota [13]>
+
+${taxReportDetail.baseEImpuesto12.impuesto13?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto12.impuesto13?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Otras operaciones con inversión del sujeto pasivo (excepto. adq. intracom) - Cuota [13]>
+
+<#else>
+<#--  [12]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [13]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[12][13]>
+
+<PRUEBA[14][15]>
+<#if taxReportDetail.baseEImpuesto14.existeTasa == "true">
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Modificación bases y cuotas- Base imponible  [14]>
+
+<#if taxReportDetail.baseEImpuesto14.base14?number < 0>
+N${taxReportDetail.baseEImpuesto14.base14?split(".")[0]?replace("-","")?left_pad(14,"0")}<#rt>
+<#else>
+${taxReportDetail.baseEImpuesto14.base14?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+</#if>
+${taxReportDetail.baseEImpuesto14.base14?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Modificación bases y cuotas- Base imponible  [14]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Modificación bases y cuotas - Cuota [15]>
+
+<#if taxReportDetail.baseEImpuesto14.impuesto15?number < 0>
+N${taxReportDetail.baseEImpuesto14.impuesto15?split(".")[0]?replace("-","")?left_pad(14,"0")}<#rt>
+<#else>
+${taxReportDetail.baseEImpuesto14.impuesto15?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+</#if>
+${taxReportDetail.baseEImpuesto14.impuesto15?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Modificación bases y cuotas - Cuota [15]>
+
+<#else>
+<#--  [14]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [15]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[14][15]>
+
+<#--  ! No hecho, rellenado con el padding correspondiente  -->
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Base imponible [156]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Tipo % [157]  -->
+${""?left_pad(5,"0")}<#rt>
+<#--  Liquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Cuota [158]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  ! FIN No hecho, rellenado con el padding correspondiente  -->
+
+<PRUEBA[16][17][18]>
+<#if taxReportDetail.baseEImpuestoRE.existeTasa == "true">
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Base imponible [16]>
+
+${taxReportDetail.baseEImpuestoRE.baseRE?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoRE.baseRE?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Base imponible [16]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Tipo % [17]>
+<#--  ! RARO QUE ESTO ESTE HARDCODEADO, TAMBIEN LA FOMRA EN QUE SE CALCULA... consultar sebastian  -->
+${"00520"?left_pad(5,"0")}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Tipo % [17]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Cuota [18]>
+
+${taxReportDetail.baseEImpuestoRE.impuestoRE5_2?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoRE.impuestoRE5_2?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Cuota [18]>
+<#else>
+<#--  [16]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  ! RARO QUE ESTO ESTE HARDCODEADO, TAMBIEN LA FOMRA EN QUE SE CALCULA... consultar sebastian  -->
+<#--  [17]  -->
+${"00520"?left_pad(5,"0")}<#rt>
+<#--  [18]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[16][17][18]>
+
+
+<#--  ! ESTO NO SE CALCULA, ESTA HARDCODEADO  consultar sebastian-->
+<PRUEBA[19][20][21][22][23][24][25][26]>
+ESTO APARECE HARDCODEADO
+
+<#--  [19]  -->
+${""?left_pad(17,"0")}
+<#--  [20]  -->
+${"00140"?left_pad(5,"0")}
+<#--  [21]  -->
+${""?left_pad(17,"0")}
+<#--  [22]  -->
+${""?left_pad(17,"0")}
+<#--  [23]  -->
+${""?left_pad(5,"0")}
+<#--  [24]  -->
+${""?left_pad(17,"0")}
+<#--  [25]  -->
+${""?left_pad(17,"0")}
+<#--  [26]  -->
+${""?left_pad(17,"0")}
+
+</PRUEBA[19][20][21][22][23][24][25][26]>
+
+
 <#--  
 <DEBUGGER>
 ejercicio=${ejercicio}

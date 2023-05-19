@@ -732,21 +732,18 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 base12: 0,
                 impuesto13: 0,
                 existeTasa: false,
-                tasa12: ""
             };
             //Devengado - Modificación bases y cuotas [14][15]
             const baseEImpuesto14 = {
                 base14: 0,
                 impuesto15: 0,
                 existeTasa: false,
-                tasa14: ""
             };
             //Devengado - Base e Impuestos 26% [16][17][18]
             const baseEImpuestoRE = {
                 baseRE: 0,
                 impuestoRE5_2: 0,
                 existeTasa: false,
-                tasaRE: ""
             };
             //Adquisiciones Intracomunitarias [10][11][36][37]
             const baseEImpuestoAdqIntra = {
@@ -864,14 +861,12 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                     (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")
                 )){
                     baseEImpuesto12.existeTasa = true;
-                    baseEImpuesto12.tasa12 = tasaString;
                     baseEImpuesto12.base12 = (parseFloat(parseFloat(baseEImpuesto12.base12) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto12.impuesto13 = (parseFloat(parseFloat(baseEImpuesto12.impuesto13) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Devengado - Modificación bases y cuotas [14][15]
                 if((disp == "CustCred" || disp == "CashRfnd")  && operaNo == null && (tasa == 10 || tasa == 4 || tasa == 21)){
                     baseEImpuesto14.existeTasa = true;
-                    baseEImpuesto14.tasa14 = tasaString;
                     baseEImpuesto14.base14 = (parseFloat(parseFloat(baseEImpuesto14.base14) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto14.impuesto15 = (parseFloat(parseFloat(baseEImpuesto14.impuesto15) + cargoImpuestos).toFixed(2)).toString();
                 }
@@ -879,7 +874,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 //Devengado - Base e Impuestos 26% [16][17][18]
                 if ((tasa == 26.20 && (disp == "CustInvc" || disp == "CashSale")) || (tasa == 26.20 && (disp == "CustCred" || disp == "CashRfnd"))){
                     baseEImpuestoRE.existeTasa = true;
-                    baseEImpuestoRE.tasaRE = tasaString;
+                    
                     baseEImpuestoRE.baseRE = (parseFloat(parseFloat(baseEImpuestoRE.baseRE) + baseImponible).toFixed(2)).toString();
 
                     baseEImpuesto21.existeTasa = true;
@@ -1001,10 +996,27 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
             log.audit(proceso, "Unidades Disponibles :" + currentScript.getRemainingUsage());
             const taxReportDetail = calcularTaxReport(taxReportDetailSS);
             // ! prueba
-            taxReportDetail.baseEImpuesto10.existeTasa = true;
-            taxReportDetail.baseEImpuesto10.base10 = "-23.00";
-            taxReportDetail.baseEImpuesto10.tasa10 = "10.00";
-            taxReportDetail.baseEImpuesto10.impuesto10 = "2.00";
+            taxReportDetail.baseEImpuesto21.existeTasa = true;
+            taxReportDetail.baseEImpuesto21.base21 = "-23.00";
+            taxReportDetail.baseEImpuesto21.tasa21 = "131.00";
+            taxReportDetail.baseEImpuesto21.impuesto21 = "2.00";
+            // [10][11]
+            taxReportDetail.baseEImpuestoAdq.existeTasa = true;
+            taxReportDetail.baseEImpuestoAdq.baseAdq = "150.00";
+            taxReportDetail.baseEImpuestoAdq.impuestoAdq = "20.00";
+            //[12][13]
+            taxReportDetail.baseEImpuesto12.existeTasa = true;
+            taxReportDetail.baseEImpuesto12.base12 = "200.00";
+            taxReportDetail.baseEImpuesto12.impuesto13 = "220.00";
+            //[14][15]
+            taxReportDetail.baseEImpuesto14.existeTasa = true;
+            taxReportDetail.baseEImpuesto14.base14 = "-300.00";
+            taxReportDetail.baseEImpuesto14.impuesto15 = "-320.00";
+            //[16][17][18]
+            taxReportDetail.baseEImpuestoRE.existeTasa = true;
+            taxReportDetail.baseEImpuestoRE.baseRE = "-400.00";
+            taxReportDetail.baseEImpuestoRE.impuestoRE5_2="-420.20";
+            
             //! fin prueba
 
             const stringTXT = renderizarTXT(configuracionObj, camposFormulario, taxReportDetail);
