@@ -12,8 +12,8 @@
 <AUX><#rt>
 ${""?left_pad(70," ")}${configuracionObj.custrecord_l34_conf_gen_txt_software_ver?left_pad(4,"0")}${""?left_pad(4," ")}${configuracionObj.custrecord_l34_conf_gen_txt_nif_ed_sw}${""?left_pad(213," ")}<#rt>
 </AUX><#rt>
-<#--  Comienza pagina 1 DP30301 -->
-<#--  Comienza pagina 1 DP30301 HEADER-->
+<#-- * Comienza pagina 1 DP30301 -->
+<#-- * Comienza pagina 1 DP30301 HEADER-->
 <T${camposFormulario.tipo_txt}01000>${""?left_pad(1," ")}<#rt>
 ${camposFormulario.tipoDeclaracion}<#rt>
 ${camposFormulario.nifDeclarante?right_pad(9, " ")}<#rt>
@@ -54,7 +54,7 @@ ${""?left_pad(5,"0")}<#rt>
 <#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [152]  -->
 ${""?left_pad(17,"0")}<#rt>
 <#--  ! FIN No hecho, rellenado con el padding correspondiente  -->
-
+<#--  * Comienza IVA DEVENGADO  -->
 <PRUEBA[01][02][03]>
 <#if taxReportDetail.baseEImpuesto4.existeTasa == "true">
 
@@ -314,7 +314,58 @@ ${""?left_pad(17,"0")}
 
 </PRUEBA[19][20][21][22][23][24][25][26]>
 
+<PRUEBA[27]TotalCuota>
+<#if taxReportDetail.totalCuota?number < 0>
+N${taxReportDetail.totalCuota?split(".")[0]?replace("-","")?left_pad(14,"0")}<#rt>
+<#else>
+${taxReportDetail.totalCuota?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+</#if>
+${taxReportDetail.totalCuota?split(".")[1]}<#rt>
 
+</PRUEBA[27]TotalCuota>
+<#--  * Termina IVA DEVENGADO  -->
+<#--  * Comienza IVA DEDUCIBLE  -->
+<PRUEBA[28][29]>
+<#if taxReportDetail.baseEImpuestoDeduccion.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en operaciones interiores corrientes - Base [28]>
+${taxReportDetail.baseEImpuestoDeduccion.baseDed?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoDeduccion.baseDed?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en operaciones interiores corrientes - Base [28]>
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en operaciones interiores corrientes - Cuota [29]>
+${taxReportDetail.baseEImpuestoDeduccion.impuestoDed?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoDeduccion.impuestoDed?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en operaciones interiores corrientes - Cuota [29]>
+<#else>
+<#--  [28]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [29]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[28][29]>
+
+<PRUEBA[30][31]>
+<#if taxReportDetail.baseEImpuestoInterioresBI.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en operaciones interiores con bienes de inversión - Base [30]>
+${taxReportDetail.baseEImpuestoInterioresBI.interioresBIBase?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoInterioresBI.interioresBIBase?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en operaciones interiores con bienes de inversión - Base [30]>
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en operaciones interiores con bienes de inversión - Cuota [31]>
+${taxReportDetail.baseEImpuestoInterioresBI.interioresBIImp?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoInterioresBI.interioresBIImp?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en operaciones interiores con bienes de inversión - Cuota [31]>
+<#else>
+<#--  [30]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [31]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[30][31]>
+
+<#--  * Termina IVA DEDUCIBLE  -->
 <#--  
 <DEBUGGER>
 ejercicio=${ejercicio}

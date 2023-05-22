@@ -798,6 +798,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 impRecDed : 0,
                 existeTasa: false,
             };
+            
 
             for(const obj of taxReportDetailSS){                
                 // ! cambiar nombre, de disp a tipoTransaccion.
@@ -959,7 +960,28 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                     baseEImpuestoRecDed.impRecDed = (parseFloat(parseFloat(baseEImpuestoRecDed.impRecDed) + parseFloat(cargoImpuestos * -1)).toFixed(2)).toString();
                 }
             }
-
+            //Liquidación (3) - Regimen General - IVA Devengado - Total cuota devengada ( [152] + [03] + [155] + [06] + [09] + [11] + [13] + [15] + [158] + [18] + [21] + [24] + [26] ) resultando en el valor= [27]
+            // ! se suma el valor si existe tasa en el codigo v1.
+            const totalCuota = (
+                // ! [152] no existe
+                // [03]
+                ((baseEImpuesto4.existeTasa) ? parseFloat(Math.abs(baseEImpuesto4.impuesto4)) : 0) +
+                // ! [155] no existe
+                // [06]
+                ((baseEImpuesto10.existeTasa) ? parseFloat(Math.abs(baseEImpuesto10.impuesto10)) : 0) +
+                // [09]
+                ((baseEImpuesto21.existeTasa) ? parseFloat(Math.abs(baseEImpuesto21.impuesto21)) : 0) +
+                // [11]
+                ((baseEImpuestoAdq.existeTasa) ? parseFloat(Math.abs(baseEImpuestoAdq.impuestoAdq)) : 0) +
+                // [13]
+                ((baseEImpuesto12.existeTasa) ? parseFloat(Math.abs(baseEImpuesto12.impuesto13)) : 0) +
+                // ! [15] en el codigo viejo no esta haciendo valor absoluto como el resto de valores. (parece que es un error, porque hacen una asignacion sin sentido)
+                ((baseEImpuesto14.existeTasa) ? parseFloat(Math.abs(baseEImpuesto14.impuesto15)) : 0) +
+                // ! [158] no existe
+                // [18]
+                ((baseEImpuestoRE.existeTasa) ? parseFloat(Math.abs(baseEImpuestoRE.impuestoRE5_2)) : 0)
+                // ! [21] + [24] + [26] ) no existe
+            ).toFixed(2);
             return {
                 baseEImpuesto4,
                 baseEImpuesto10,
@@ -979,6 +1001,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 baseEImpuestoIntracomunitariasBI,
                 baseEImpuestoInterioresBI,
                 baseEImpuestoRecDed,
+                totalCuota
             };
         }
 
@@ -1016,7 +1039,17 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
             taxReportDetail.baseEImpuestoRE.existeTasa = true;
             taxReportDetail.baseEImpuestoRE.baseRE = "-400.00";
             taxReportDetail.baseEImpuestoRE.impuestoRE5_2="-420.20";
-            
+            // [27]
+            taxReportDetail.totalCuota = "-2000.00";
+            // [28][29]
+            taxReportDetail.baseEImpuestoDeduccion.existeTasa = true;
+            taxReportDetail.baseEImpuestoDeduccion.baseDed = "120.20";
+            taxReportDetail.baseEImpuestoDeduccion.impuestoDed = "140.40";
+            // [30][31]
+            taxReportDetail.baseEImpuestoInterioresBI.existeTasa = true;
+            taxReportDetail.baseEImpuestoInterioresBI.interioresBIBase = "200.30";
+            taxReportDetail.baseEImpuestoInterioresBI.interioresBIImp = "300.30";
+
             //! fin prueba
 
             const stringTXT = renderizarTXT(configuracionObj, camposFormulario, taxReportDetail);
