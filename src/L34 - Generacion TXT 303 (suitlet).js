@@ -703,7 +703,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
          * 
          * @param {Object} taxReportDetailSS 
          */
-        function calcularTaxReport(taxReportDetailSS){
+        function calcularTaxReport(taxReportDetailSS, camposFormulario){
             const proceso = "POST calcularTaxReport";
             // * CALCULO IVA DEVENGADO
             //Devengado - Base e Impuestos 4% [01][03]
@@ -961,7 +961,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 }
             }
             //Liquidación (3) - Regimen General - IVA Devengado - Total cuota devengada ( [152] + [03] + [155] + [06] + [09] + [11] + [13] + [15] + [158] + [18] + [21] + [24] + [26] ) resultando en el valor= [27]
-            // ! se suma el valor si existe tasa en el codigo v1.
+            // ! se suma el valor si existe tasa en el codigo v1, aunque para la totalizacion del iva deducible, esta condicion no se considera, quiza esta mal la primera o la segunda?, o ambas deben ser como son...
             const totalCuota = (
                 // ! [152] no existe
                 // [03]
@@ -982,6 +982,29 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 ((baseEImpuestoRE.existeTasa) ? parseFloat(Math.abs(baseEImpuestoRE.impuestoRE5_2)) : 0)
                 // ! [21] + [24] + [26] ) no existe
             ).toFixed(2);
+
+
+            // Liquidación (3) - Regimen General - IVA Deducible - Total a deducir ( [29] + [31] + [33] + [35] + [37] + [39] + [41] + [42] + [43] + [44] ) - Cuota [45]
+            const totalDeducir = (
+                // [29]
+                parseFloat(Math.abs(baseEImpuestoDeduccion.impuestoDed)) +
+                // [31]
+                parseFloat(Math.abs(baseEImpuestoInterioresBI.interioresBIImp)) +
+                // ! [33] el codigo v1 en el else lo pone a 0 si no cumple esta condicion.
+                ((baseEImpuestoBienes.existeTasa && camposFormulario.ivaDiferido =="2") ? parseFloat(Math.abs(baseEImpuestoBienes.impuestoBienes)) : 0) +
+                // [35]
+                parseFloat(Math.abs(baseEImpuestoImportacionesBI.importacionesBIImp)) +
+                // [37]
+                ((baseEImpuestoAdq.existeTasa) ? parseFloat(Math.abs(baseEImpuestoAdq.impuestoAdq)) : 0) +
+                // [39] 
+                parseFloat(Math.abs(baseEImpuestoIntracomunitariasBI.intracomunitariasBIImp)) +
+                // ! [41] no hacen valor absoluto, raro, aunque para el calculo en el for hacen * -1
+                parseFloat(baseEImpuestoRecDed.impRecDed)
+                // ! [42] no existe valor calculado
+                // ! [43] no existe valor calculado
+                // ! [44] no existe valor calculado
+            ).toFixed(2);
+
             return {
                 baseEImpuesto4,
                 baseEImpuesto10,
@@ -1001,7 +1024,8 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                 baseEImpuestoIntracomunitariasBI,
                 baseEImpuestoInterioresBI,
                 baseEImpuestoRecDed,
-                totalCuota
+                totalCuota,
+                totalDeducir,
             };
         }
 
@@ -1017,7 +1041,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
             
             const taxReportDetailSS = getTaxReportDetailSS(camposFormulario);
             log.audit(proceso, "Unidades Disponibles :" + currentScript.getRemainingUsage());
-            const taxReportDetail = calcularTaxReport(taxReportDetailSS);
+            const taxReportDetail = calcularTaxReport(taxReportDetailSS, camposFormulario);
             // ! prueba
             taxReportDetail.baseEImpuesto21.existeTasa = true;
             taxReportDetail.baseEImpuesto21.base21 = "-23.00";
@@ -1049,6 +1073,25 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
             taxReportDetail.baseEImpuestoInterioresBI.existeTasa = true;
             taxReportDetail.baseEImpuestoInterioresBI.interioresBIBase = "200.30";
             taxReportDetail.baseEImpuestoInterioresBI.interioresBIImp = "300.30";
+            // [32][33]
+            taxReportDetail.baseEImpuestoBienes.existeTasa = true;
+            taxReportDetail.baseEImpuestoBienes.baseBienes = "460.20";
+            taxReportDetail.baseEImpuestoBienes.impuestoBienes = "480.28";
+            // [34][35]
+            taxReportDetail.baseEImpuestoImportacionesBI.existeTasa = true;
+            taxReportDetail.baseEImpuestoImportacionesBI.importacionesBIBase = "560.23";
+            taxReportDetail.baseEImpuestoImportacionesBI.importacionesBIImp = "580.33";
+            // se omite [36][37] utilizan las mismas variables que [10][11]
+            // [38][39]
+            taxReportDetail.baseEImpuestoIntracomunitariasBI.existeTasa = true;
+            taxReportDetail.baseEImpuestoIntracomunitariasBI.intracomunitariasBIBase = "620.80";
+            taxReportDetail.baseEImpuestoIntracomunitariasBI.intracomunitariasBIImp = "630.70";
+            // [40][41]
+            taxReportDetail.baseEImpuestoRecDed.existeTasa = true;
+            taxReportDetail.baseEImpuestoRecDed.baseRecDed = "760.11";
+            taxReportDetail.baseEImpuestoRecDed.impRecDed = "770.14";
+            // [45]
+            taxReportDetail.totalDeducir = "-1345.23";
 
             //! fin prueba
 

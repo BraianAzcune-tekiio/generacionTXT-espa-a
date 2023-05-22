@@ -365,6 +365,132 @@ ${""?left_pad(17,"0")}<#rt>
 </#if>
 </PRUEBA[30][31]>
 
+<PRUEBA[32][33]>
+<#--  camposFormulario.ivaDiferido 1 es true 2 false  -->
+<#if  taxReportDetail.baseEImpuestoBienes.existeTasa == "true" && camposFormulario.ivaDiferido == "2">
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en las importaciones de bienes corrientes - Base [32]>
+${taxReportDetail.baseEImpuestoBienes.baseBienes?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoBienes.baseBienes?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en las importaciones de bienes corrientes - Base [32]>
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en las importaciones de bienes corrientes - Cuota [33]>
+${taxReportDetail.baseEImpuestoBienes.impuestoBienes?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoBienes.impuestoBienes?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en las importaciones de bienes corrientes - Cuota [33]>
+<#else>
+<#--  [32]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [33]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+
+</PRUEBA[32][33]>
+
+<PRUEBA[34][35]>
+<#if  taxReportDetail.baseEImpuestoImportacionesBI.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en las importaciones de bienes de inversión - Base [34]>
+${taxReportDetail.baseEImpuestoImportacionesBI.importacionesBIBase?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoImportacionesBI.importacionesBIBase?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en las importaciones de bienes de inversión - Base [34]>
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en las importaciones de bienes de inversión - Cuota [35]>
+${taxReportDetail.baseEImpuestoImportacionesBI.importacionesBIImp?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoImportacionesBI.importacionesBIImp?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Por cuotas soportadas en las importaciones de bienes de inversión - Cuota [35]>
+<#else>
+<#--  [34]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [35]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[34][35]>
+
+<PRUEBA[36][37]>
+<#--  ! se esta reutilizando de [10][11] todos sus valores, esto hace v1  -->
+<#if  taxReportDetail.baseEImpuestoAdq.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - En adquisiciones intracomunitarias de bienes y servicios corrientes - Base [36]>
+${taxReportDetail.baseEImpuestoAdq.baseAdq?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoAdq.baseAdq?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - En adquisiciones intracomunitarias de bienes y servicios corrientes - Base [36]>
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - En adquisiciones intracomunitarias de bienes y servicios corrientes - Cuota [37]>
+${taxReportDetail.baseEImpuestoAdq.impuestoAdq?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoAdq.impuestoAdq?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - En adquisiciones intracomunitarias de bienes y servicios corrientes - Cuota [37]>
+<#else>
+<#--  [36]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [37]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[36][37]>
+
+<PRUEBA[38][39]>
+<#if  taxReportDetail.baseEImpuestoIntracomunitariasBI.existeTasa == "true" >
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - En adquisiciones intracomunitarias de bienes de inversión - Base [38]>
+${taxReportDetail.baseEImpuestoIntracomunitariasBI.intracomunitariasBIBase?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoIntracomunitariasBI.intracomunitariasBIBase?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - En adquisiciones intracomunitarias de bienes de inversión - Base [38]>
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - En adquisiciones intracomunitarias de bienes de inversión - Cuota [39]>
+${taxReportDetail.baseEImpuestoIntracomunitariasBI.intracomunitariasBIImp?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoIntracomunitariasBI.intracomunitariasBIImp?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - En adquisiciones intracomunitarias de bienes de inversión - Cuota [39]>
+
+<#else>
+<#--  [38]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [39]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[38][39]>
+
+<PRUEBA[40][41]>
+<#if  taxReportDetail.baseEImpuestoRecDed.existeTasa == "true" >
+
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Rectificación de deducciones - Base [40]>
+${taxReportDetail.baseEImpuestoRecDed.baseRecDed?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoRecDed.baseRecDed?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Rectificación de deducciones - Base [40]>
+<PRUEBALiquidación (3) - Regimen General - IVA Deducible - Rectificación de deducciones - Cuota [41]>
+${taxReportDetail.baseEImpuestoRecDed.impRecDed?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuestoRecDed.impRecDed?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Deducible - Rectificación de deducciones - Cuota [41]>
+<#else>
+<#--  [40]  -->
+${""?left_pad(17,"0")}<#rt>
+<#--  [41]  -->
+${""?left_pad(17,"0")}<#rt>
+</#if>
+</PRUEBA[40][41]>
+
+<#--  ! ESTO NO SE CALCULA, ESTA HARDCODEADO  consultar sebastian-->
+<PRUEBA[42][43][44]>
+ESTO APARECE HARDCODEADO
+<#--  [42]  -->
+${""?left_pad(17,"0")}
+<#--  [43]  -->
+${""?left_pad(17,"0")}
+<#--  [44]  -->
+${""?left_pad(17,"0")}
+</PRUEBA[42][43][44]>
+
+<PRUEBA[45]Total a deducir>
+<#if taxReportDetail.totalDeducir?number < 0>
+N${taxReportDetail.totalDeducir?split(".")[0]?replace("-","")?left_pad(14,"0")}<#rt>
+<#else>
+${taxReportDetail.totalDeducir?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+</#if>
+${taxReportDetail.totalDeducir?split(".")[1]}<#rt>
+
+</PRUEBA[45]Total a deducir>
+
 <#--  * Termina IVA DEDUCIBLE  -->
 <#--  
 <DEBUGGER>
