@@ -46,14 +46,36 @@ ${camposFormulario.exoneradoResumenAnualIVA390}<#rt>
 <#else>
 <#if ultimoMesOTrimestre>0<#else>${camposFormulario.existeVolumenOperaciones}</#if><#rt>
 </#if>
-<#--  ! No hecho, rellenado con el padding correspondiente  -->
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [150]  -->
+
+<PRUEBA[150][151][152]>
+<#if taxReportDetail.baseEImpuesto150.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [150]>
+${taxReportDetail.baseEImpuesto150.base150?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto150.base150?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [150]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [151]>
+${"00000"?left_pad(5,"0")}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [151]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [152]>
+${taxReportDetail.baseEImpuesto150.impuesto152?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto150.impuesto152?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [152]>
+
+<#else>
+<#--  [150]  -->
 ${""?left_pad(17,"0")}<#rt>
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [151]  -->
-${""?left_pad(5,"0")}<#rt>
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [152]  -->
+<#--  [151]  -->
+${"00000"?left_pad(5,"0")}<#rt>
+<#--  [152]  -->
 ${""?left_pad(17,"0")}<#rt>
-<#--  ! FIN No hecho, rellenado con el padding correspondiente  -->
+</#if>
+</PRUEBA[150][151][152]>
+
 <#--  * Comienza IVA DEVENGADO  -->
 <PRUEBA[01][02][03]>
 <#if taxReportDetail.baseEImpuesto4.existeTasa == "true">
@@ -67,10 +89,7 @@ ${taxReportDetail.baseEImpuesto4.base4?split(".")[1]}<#rt>
 </PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [01]>
 
 <PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [02]>
-
-<#--  * por codigo se garantiza que existe el "." para separar y que se tiene dos decimales  -->
-${taxReportDetail.baseEImpuesto4.tasa4?split(".")[0]?left_pad(3, "0")}<#rt>
-${taxReportDetail.baseEImpuesto4.tasa4?split(".")[1]}<#rt>
+${"00400"?left_pad(5, "0")}<#rt>
 
 </PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [02]>
 
@@ -85,20 +104,44 @@ ${taxReportDetail.baseEImpuesto4.impuesto4?split(".")[1]}<#rt>
 <#--  [01]  -->
 ${""?left_pad(17,"0")}<#rt>
 <#--  [02]  -->
-${""?left_pad(5,"0")}<#rt>
+${"00400"?left_pad(5,"0")}<#rt>
 <#--  [03]  -->
 ${""?left_pad(17,"0")}<#rt>
 </#if>
 </PRUEBA[01][02][03]>
 
-<#--  ! No hecho, rellenado con el padding correspondiente  -->
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [153]  -->
+
+<PRUEBA[153][154][155]>
+<#if taxReportDetail.baseEImpuesto153.existeTasa == "true">
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [153]>
+${taxReportDetail.baseEImpuesto153.base153?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto153.base153?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Base imponible [153]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [154]>
+${"00500"?left_pad(5,"0")}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [154]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [155]>
+${taxReportDetail.baseEImpuesto153.impuesto155?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto153.impuesto155?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [155]>
+
+<#else>
+<#--  [153]  -->
 ${""?left_pad(17,"0")}<#rt>
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [154]  -->
-${""?left_pad(5,"0")}<#rt>
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Régimen general - Cuota [155]  -->
+<#--  [154]  -->
+${"00500"?left_pad(5,"0")}<#rt>
+<#--  [155]  -->
 ${""?left_pad(17,"0")}<#rt>
-<#--  ! FIN No hecho, rellenado con el padding correspondiente  -->
+</#if>
+
+</PRUEBA[153][154][155]>
+
 
 <PRUEBA[04][05][06]>
 <#if taxReportDetail.baseEImpuesto10.existeTasa == "true">
@@ -111,8 +154,7 @@ ${taxReportDetail.baseEImpuesto10.base10?split(".")[1]}<#rt>
 
 <PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [05]>
 
-${taxReportDetail.baseEImpuesto10.tasa10?split(".")[0]?left_pad(3, "0")}<#rt>
-${taxReportDetail.baseEImpuesto10.tasa10?split(".")[1]}<#rt>
+${"01000"?left_pad(5, "0")}<#rt>
 
 </PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [05]>
 
@@ -127,7 +169,7 @@ ${taxReportDetail.baseEImpuesto10.impuesto10?split(".")[1]}<#rt>
 <#--  [04]  -->
 ${""?left_pad(17,"0")}<#rt>
 <#--  [05]  -->
-${""?left_pad(5,"0")}<#rt>
+${"01000"?left_pad(5,"0")}<#rt>
 <#--  [06]  -->
 ${""?left_pad(17,"0")}<#rt>
 </#if>
@@ -146,8 +188,7 @@ ${taxReportDetail.baseEImpuesto21.base21?split(".")[1]}<#rt>
 
 <PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [08]>
 
-${taxReportDetail.baseEImpuesto21.tasa21?split(".")[0]?left_pad(3, "0")}<#rt>
-${taxReportDetail.baseEImpuesto21.tasa21?split(".")[1]}<#rt>
+${"02100"?left_pad(5, "0")}<#rt>
 
 </PRUEBALiquidación (3) - Regimen General - IVA Devengado - Régimen general - Tipo % [08]>
 
@@ -161,7 +202,7 @@ ${taxReportDetail.baseEImpuesto21.impuesto21?split(".")[1]}<#rt>
 <#--  [07]  -->
 ${""?left_pad(17,"0")}<#rt>
 <#--  [08]  -->
-${""?left_pad(5,"0")}<#rt>
+${"02100"?left_pad(5,"0")}<#rt>
 <#--  [09]  -->
 ${""?left_pad(17,"0")}<#rt>
 </#if>
@@ -248,14 +289,35 @@ ${""?left_pad(17,"0")}<#rt>
 </#if>
 </PRUEBA[14][15]>
 
-<#--  ! No hecho, rellenado con el padding correspondiente  -->
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Base imponible [156]  -->
+
+<PRUEBA[156][157][158]>
+<#if taxReportDetail.baseEImpuesto156.existeTasa == "true">
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Base imponible [156]>
+${taxReportDetail.baseEImpuesto156.base156?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto156.base156?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Base imponible [156]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Tipo % [157]>
+${"00175"?left_pad(5,"0")}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Tipo % [157]>
+
+<PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Cuota [158]>
+${taxReportDetail.baseEImpuesto156.impuesto158?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+${taxReportDetail.baseEImpuesto156.impuesto158?split(".")[1]}<#rt>
+
+</PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Cuota [158]>
+<#else>
+<#--  [156]  -->
 ${""?left_pad(17,"0")}<#rt>
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Tipo % [157]  -->
-${""?left_pad(5,"0")}<#rt>
-<#--  Liquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Cuota [158]  -->
+<#--  [157]  -->
+${"00175"?left_pad(5,"0")}<#rt>
+<#--  [158]  -->
 ${""?left_pad(17,"0")}<#rt>
-<#--  ! FIN No hecho, rellenado con el padding correspondiente  -->
+</#if>
+</PRUEBA[156][157][158]>
+
 
 <PRUEBA[16][17][18]>
 <#if taxReportDetail.baseEImpuestoRE.existeTasa == "true">
@@ -268,8 +330,8 @@ ${taxReportDetail.baseEImpuestoRE.baseRE?split(".")[1]}<#rt>
 </PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Base imponible [16]>
 
 <PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Tipo % [17]>
-<#--  ! RARO QUE ESTO ESTE HARDCODEADO, TAMBIEN LA FOMRA EN QUE SE CALCULA... consultar sebastian  -->
-${"00520"?left_pad(5,"0")}<#rt>
+
+${"00050"?left_pad(5,"0")}<#rt>
 
 </PRUEBALiquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - Tipo % [17]>
 
@@ -282,9 +344,9 @@ ${taxReportDetail.baseEImpuestoRE.impuestoRE5_2?split(".")[1]}<#rt>
 <#else>
 <#--  [16]  -->
 ${""?left_pad(17,"0")}<#rt>
-<#--  ! RARO QUE ESTO ESTE HARDCODEADO, TAMBIEN LA FOMRA EN QUE SE CALCULA... consultar sebastian  -->
+
 <#--  [17]  -->
-${"00520"?left_pad(5,"0")}<#rt>
+${"00050"?left_pad(5,"0")}<#rt>
 <#--  [18]  -->
 ${""?left_pad(17,"0")}<#rt>
 </#if>
@@ -304,7 +366,7 @@ ${""?left_pad(17,"0")}
 <#--  [22]  -->
 ${""?left_pad(17,"0")}
 <#--  [23]  -->
-${""?left_pad(5,"0")}
+${"00520"?left_pad(5,"0")}
 <#--  [24]  -->
 ${""?left_pad(17,"0")}
 <#--  [25]  -->
@@ -481,7 +543,7 @@ ${""?left_pad(17,"0")}
 ${""?left_pad(17,"0")}
 </PRUEBA[42][43][44]>
 
-<PRUEBA[45]Total a deducir>
+<PRUEBA[45]Liquidación (3) - Regimen General - IVA Deducible - Total a deducir ( [29] + [31] + [33] + [35] + [37] + [39] + [41] + [42] + [43] + [44] ) - Cuota [45]>
 <#if taxReportDetail.totalDeducir?number < 0>
 N${taxReportDetail.totalDeducir?split(".")[0]?replace("-","")?left_pad(14,"0")}<#rt>
 <#else>
@@ -489,9 +551,24 @@ ${taxReportDetail.totalDeducir?split(".")[0]?replace("-","")?left_pad(15,"0")}<#
 </#if>
 ${taxReportDetail.totalDeducir?split(".")[1]}<#rt>
 
-</PRUEBA[45]Total a deducir>
+</PRUEBA[45]Liquidación (3) - Regimen General - IVA Deducible - Total a deducir ( [29] + [31] + [33] + [35] + [37] + [39] + [41] + [42] + [43] + [44] ) - Cuota [45]>
 
+<PRUEBA[46]Liquidación (3) - Regimen General - IVA Deducible - Resultado régimen general ( [27] - [45] ) - Cuota [46]>
+<#if taxReportDetail.resultadoRegimenGeneral?number < 0>
+N${taxReportDetail.resultadoRegimenGeneral?split(".")[0]?replace("-","")?left_pad(14,"0")}<#rt>
+<#else>
+${taxReportDetail.resultadoRegimenGeneral?split(".")[0]?replace("-","")?left_pad(15,"0")}<#rt>
+</#if>
+${taxReportDetail.resultadoRegimenGeneral?split(".")[1]}<#rt>
+
+</PRUEBA[46]Liquidación (3) - Regimen General - IVA Deducible - Resultado régimen general ( [27] - [45] ) - Cuota [46]>
 <#--  * Termina IVA DEDUCIBLE  -->
+<PRUEBA-RESERVADO-AEAT>
+${""?left_pad(600," ")}<#rt>
+${""?left_pad(13," ")}<#rt>
+
+</PRUEBA-RESERVADO-AEAT>
+
 <#--  
 <DEBUGGER>
 ejercicio=${ejercicio}
