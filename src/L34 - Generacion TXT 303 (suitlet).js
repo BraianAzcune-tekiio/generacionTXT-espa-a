@@ -381,6 +381,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
         function bool(s) {
             if (s == "T" || s === true) return true;
             if (s == "F" || s === false) return false;
+            if (s === "") return false;
             throw new Error("Este campo no es un booleano, para ser enviado" + JSON.stringify(s));
         }
 
@@ -814,100 +815,115 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
             };
 
 
-            for (const obj of taxReportDetailSS) {
-                // ! cambiar nombre, de disp a tipoTransaccion.
-                const disp = obj["type"];
+            for (let i = 0; i < taxReportDetailSS.length; i++) {
+                const obj = taxReportDetailSS[i];
+                //Tipo de Transacción
+                const tipoTransaccion = obj["type"];
+                //Tasa de Impuesto
                 let tasaString = obj["taxrate"];
                 const tasa = parseFloat(tasaString.replace(/%/g, ""));
                 tasaString = tasa.toFixed(2).toString();
-
+                // Base imponible
                 const baseImponible = parseFloat(obj["amount"]);
+                // Cargo de Impuesto
                 const cargoImpuestos = parseFloat(obj["taxamount"]);
+                // IMPORTACION
+                const importacion = bool(obj["custbody_esp_importacion"]);
+                // CODIGO CE
+                const codCE = bool(obj["custbody_esp_codigo_ce"]);
+                // AUTOREPERCUTIDO 
+                const autorepercutido = bool(obj["custbody_esp_autorepercutido"]);
+                // IVA BIENES INMUEBLES 
+                const ivaBienesInmuebles = bool(obj["custbody_iva_bienes_inmuebles"]);
+                // APLICA AL SERVICIO 
+                const aplicaAlServicio = bool(obj["custbody_aplica_servicio"]);
+                // IMPUESTO DERIVADO
+                const impuestoDerivado = parseFloat(obj["custbody_es_impuesto_derivado"]);
+                // EXPORTAR 
+                const exportar = bool(obj["custbody_esp_exportar"]);
+                // NO SUJETO
+                const noSujeto = bool(obj["custbody_esp_no_sujeto"]);
 
-                // ! HARDCODEADO, los valores estan en la lista de ejemplo, pero no en el SS que hay que utilizar
-                /**
-                 * IMPORTACION
-                 * CODIGO CE
-                 * AUTOREPERCUTIDO 
-                 * IVA BIENES INMUEBLES 
-                 * APLICA AL SERVICIO 
-                 * IMPUESTO DERIVADO
-                 * EXPORTAR 
-                 * NO SUJETO
-                 */
-                const impor = bool("T");
-                const codCE = bool("T");
-                const autorepercutido = bool("T");
-                const bienesInv = bool("T");
-                const esServicio = bool("T");
-                const tasaParent = 0.0;
-                const exporta = bool("T");
-                const operaNo = null;
+                log.debug("taxReportDetailSS[" + i + "]", "obj= " + JSON.stringify({
+                    tipoTransaccion: tipoTransaccion,
+                    tasa: tasaString,
+                    baseImponible: baseImponible,
+                    cargoImpuestos: cargoImpuestos,
+                    impor: importacion,
+                    codCE: codCE,
+                    autorepercutido: autorepercutido,
+                    bienesInv: ivaBienesInmuebles,
+                    esServicio: aplicaAlServicio,
+                    tasaParent: impuestoDerivado,
+                    exporta: exportar,
+                    operaNo: noSujeto
+                }));
+
 
                 // * todos los valores deben utilizar el parseFloat, y toFixed 2, con toString, para que el motor de la plantilla pueda separar por "."
 
                 //Liquidación (3) - Regimen General - IVA Devengado - Régimen general - 0% [150][152]
-                if ((tasa == 0 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)) {
+                if ((tasa == 0 && (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale") && noSujeto == null)) {
                     baseEImpuesto150.existeTasa = true;
                     baseEImpuesto150.base150 = (parseFloat(parseFloat(baseEImpuesto150.base150) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto150.impuesto152 = (parseFloat(parseFloat(baseEImpuesto150.impuesto152) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Devengado - Base e Impuestos 4% [01][03]
-                if ((tasa == 4 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)) {
+                if ((tasa == 4 && (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale") && noSujeto == null)) {
                     baseEImpuesto4.existeTasa = true;
                     baseEImpuesto4.base4 = (parseFloat(parseFloat(baseEImpuesto4.base4) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto4.impuesto4 = (parseFloat(parseFloat(baseEImpuesto4.impuesto4) + cargoImpuestos).toFixed(2)).toString();
                 }
 
                 //Liquidación (3) - Regimen General - IVA Devengado - Régimen general - 5% [153][155]
-                if ((tasa == 5 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)) {
+                if ((tasa == 5 && (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale") && noSujeto == null)) {
                     baseEImpuesto153.existeTasa = true;
                     baseEImpuesto153.base153 = (parseFloat(parseFloat(baseEImpuesto153.base153) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto153.impuesto155 = (parseFloat(parseFloat(baseEImpuesto153.impuesto155) + cargoImpuestos).toFixed(2)).toString();
                 }
 
                 //Devengado - Base e Impuestos 10% [04][06]
-                if ((tasa == 10 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)) {
+                if ((tasa == 10 && (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale") && noSujeto == null)) {
                     baseEImpuesto10.existeTasa = true;
                     baseEImpuesto10.base10 = (parseFloat(parseFloat(baseEImpuesto10.base10) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto10.impuesto10 = (parseFloat(parseFloat(baseEImpuesto10.impuesto10) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Devengado - Base e Impuestos 21% [07][09]
-                if ((tasa == 21 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)) {
+                if ((tasa == 21 && (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale") && noSujeto == null)) {
                     baseEImpuesto21.existeTasa = true;
                     baseEImpuesto21.base21 = (parseFloat(parseFloat(baseEImpuesto21.base21) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto21.impuesto21 = (parseFloat(parseFloat(baseEImpuesto21.impuesto21) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Devengado - Otras operaciones con inversión del sujeto pasivo (excepto. adq. intracom) [12][13]
                 if ((
-                    (impor != true && codCE != true) && autorepercutido == true && bienesInv != true &&
-                    (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd"))
+                    (importacion != true && codCE != true) && autorepercutido == true && ivaBienesInmuebles != true &&
+                    (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg" || tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd"))
                     ||
                     (
-                        (impor == true && codCE != true) && autorepercutido == true && bienesInv != true && esServicio == true
-                        && (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")
+                        (importacion == true && codCE != true) && autorepercutido == true && ivaBienesInmuebles != true && aplicaAlServicio == true
+                        && (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg" || tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd")
                     )) {
                     baseEImpuesto12.existeTasa = true;
                     baseEImpuesto12.base12 = (parseFloat(parseFloat(baseEImpuesto12.base12) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto12.impuesto13 = (parseFloat(parseFloat(baseEImpuesto12.impuesto13) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Devengado - Modificación bases y cuotas [14][15]
-                if ((disp == "CustCred" || disp == "CashRfnd") && operaNo == null && (tasa == 10 || tasa == 4 || tasa == 21)) {
+                if ((tipoTransaccion == "CustCred" || tipoTransaccion == "CashRfnd") && noSujeto == null && (tasa == 10 || tasa == 4 || tasa == 21)) {
                     baseEImpuesto14.existeTasa = true;
                     baseEImpuesto14.base14 = (parseFloat(parseFloat(baseEImpuesto14.base14) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto14.impuesto15 = (parseFloat(parseFloat(baseEImpuesto14.impuesto15) + cargoImpuestos).toFixed(2)).toString();
                 }
 
                 //Liquidación (3) - Regimen General - IVA Devengado - Recargo equivalencia - 1.75% [156][158]
-                if ((tasa == 1.75 && (disp == "CustInvc" || disp == "CashSale") && operaNo == null)) {
+                if ((tasa == 1.75 && (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale") && noSujeto == null)) {
                     baseEImpuesto156.existeTasa = true;
                     baseEImpuesto156.base156 = (parseFloat(parseFloat(baseEImpuesto156.base156) + baseImponible).toFixed(2)).toString();
                     baseEImpuesto156.impuesto158 = (parseFloat(parseFloat(baseEImpuesto156.impuesto158) + cargoImpuestos).toFixed(2)).toString();
                 }
 
                 // ! en el codigo v1, se ve que utiliza base21, aunque esto esta con la tasa 26...
-                //Devengado - Base e Impuestos 26% [16][17][18]
-                if ((tasa == 26.20 && (disp == "CustInvc" || disp == "CashSale")) || (tasa == 26.20 && (disp == "CustCred" || disp == "CashRfnd"))) {
+                //Devengado - Base e Impuestos 26% [16][18]
+                if ((tasa == 26.20 && (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale")) || (tasa == 26.20 && (tipoTransaccion == "CustCred" || tipoTransaccion == "CashRfnd"))) {
                     baseEImpuestoRE.existeTasa = true;
 
                     baseEImpuestoRE.baseRE = (parseFloat(parseFloat(baseEImpuestoRE.baseRE) + baseImponible).toFixed(2)).toString();
@@ -923,8 +939,8 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                     baseEImpuesto21.impuesto21 = (parseFloat(parseFloat(baseEImpuesto21.impuesto21) + parseFloat(cargoImpuestos * parseFloat(-0.21))).toFixed(2)).toString();
                 }
                 //Adquisiciones Intracomunitarias [10][11][36][37]
-                if (tasa == 0 && codCE == true && tasaParent > 0 && (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")) {
-                    if (bienesInv == true) {
+                if (tasa == 0 && codCE == true && impuestoDerivado > 0 && (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg" || tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd")) {
+                    if (ivaBienesInmuebles == true) {
                         // ! las variables de este if, no se utilizan en el codigo v1, ni aqui tampoco, solo se calcula pero no se hace nada...
                         baseEImpuestoAdqIntra.baseAdqIntra = (parseFloat(parseFloat(baseEImpuestoAdqIntra.baseAdqIntra) + baseImponible).toFixed(2)).toString();
                         baseEImpuestoAdqIntra.impuestoAdqIntra = (parseFloat(parseFloat(baseEImpuestoAdqIntra.impuestoAdqIntra) + cargoImpuestos).toFixed(2)).toString();
@@ -935,43 +951,43 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                     }
                 }
                 //Deducible - Base Deducción [28][29]
-                if (((tasa == 4 && (disp == "VendBill" || disp == "CardChrg") && bienesInv != true && impor != true)
-                    || (tasa == 10 && (disp == "VendBill" || disp == "CardChrg") && bienesInv != true && impor != true)
-                    || (tasa == 21 && (disp == "VendBill" || disp == "CardChrg") && bienesInv != true && impor != true))
-                    || (codCE != true && autorepercutido == true && bienesInv != true && (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd"))) {
+                if (((tasa == 4 && (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg") && ivaBienesInmuebles != true && importacion != true)
+                    || (tasa == 10 && (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg") && ivaBienesInmuebles != true && importacion != true)
+                    || (tasa == 21 && (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg") && ivaBienesInmuebles != true && importacion != true))
+                    || (codCE != true && autorepercutido == true && ivaBienesInmuebles != true && (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg" || tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd"))) {
                     baseEImpuestoDeduccion.existeTasa = true;
                     baseEImpuestoDeduccion.baseDed = (parseFloat(parseFloat(baseEImpuestoDeduccion.baseDed) + baseImponible).toFixed(2)).toString();
                     baseEImpuestoDeduccion.impuestoDed = (parseFloat(parseFloat(baseEImpuestoDeduccion.impuestoDed) + cargoImpuestos).toFixed(2)).toString();
                 }
                 // Importaciones Bienes Corrientes [32][33]
-                if (impor == true && bienesInv != true && esServicio != true && (disp == "VendBill" || disp == "CardChrg" || disp == "VendCred" || disp == "CardRfnd")) {
+                if (importacion == true && ivaBienesInmuebles != true && aplicaAlServicio != true && (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg" || tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd")) {
                     baseEImpuestoBienes.existeTasa = true;
                     baseEImpuestoBienes.baseBienes = (parseFloat(parseFloat(baseEImpuestoBienes.baseBienes) + baseImponible).toFixed(2)).toString();
                     baseEImpuestoBienes.impuestoBienes = (parseFloat(parseFloat(baseEImpuestoBienes.impuestoBienes) + cargoImpuestos).toFixed(2)).toString();
                 }
                 //Entregas Intracomunitarias [59]
-                if (codCE == true && ((disp == "CustCred" || disp == "CashRfnd") || (disp == "CustInvc" || disp == "CashSale"))) {
+                if (codCE == true && ((tipoTransaccion == "CustCred" || tipoTransaccion == "CashRfnd") || (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale"))) {
                     // ! se multiplica por -1, se utiliza en Página 2 - Actividades Agricolas (no para crear 30301)
                     entregasIntracom = (parseFloat(parseFloat(entregasIntracom) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
                 }
                 //Exportaciones y operaciones asimiladas [60]
-                if (exporta == true && ((disp == "CustCred" || disp == "CashRfnd") || (disp == "CustInvc" || disp == "CashSale"))) {
+                if (exportar == true && ((tipoTransaccion == "CustCred" || tipoTransaccion == "CashRfnd") || (tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale"))) {
                     // ! se multiplica por -1, se utiliza en Página 2 - Actividades Agricolas (no para crear 30301)
                     exportaciones = (parseFloat(parseFloat(exportaciones) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
                 }
                 //Operaciones No Sujetas [61]
-                if (operaNo != null && bienesInv != true && ((disp == "CustInvc" || disp == "CashSale") || (disp == "CustCred" || disp == "CashRfnd")) && exporta != true && codCE != true) {
+                if (noSujeto != null && ivaBienesInmuebles != true && ((tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale") || (tipoTransaccion == "CustCred" || tipoTransaccion == "CashRfnd")) && exportar != true && codCE != true) {
                     // ! se multiplica por -1, se utiliza en Página 2 - Actividades Agricolas (no para crear 30301)
                     operacionesNosujetas = (parseFloat(parseFloat(operacionesNosujetas) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
                 }
                 //Operaciones Sujetas con Inversion del sujeto pasivo [122]
-                if (operaNo == null && bienesInv != true && ((disp == "CustInvc" || disp == "CashSale") || (disp == "CustCred" || disp == "CashRfnd")) && exporta != true && codCE != true && autorepercutido == true) {
+                if (noSujeto == null && ivaBienesInmuebles != true && ((tipoTransaccion == "CustInvc" || tipoTransaccion == "CashSale") || (tipoTransaccion == "CustCred" || tipoTransaccion == "CashRfnd")) && exportar != true && codCE != true && autorepercutido == true) {
                     // ! se multiplica por -1, se utiliza en Página 2 - Actividades Agricolas (no para crear 30301)
                     operacionesSujetasISP = (parseFloat(parseFloat(operacionesSujetasISP) + parseFloat(baseImponible * -1)).toFixed(2)).toString();
                 }
                 //IVA Bienes Inversion [30],[31],[34],[35],[38],[39]
-                if (bienesInv == true && (disp == "VendBill" || disp == "CardChrg")) {
-                    if (impor == true) {
+                if (ivaBienesInmuebles == true && (tipoTransaccion == "VendBill" || tipoTransaccion == "CardChrg")) {
+                    if (importacion == true) {
                         //Bienes Inversión de Importaciones
                         baseEImpuestoImportacionesBI.existeTasa = true;
                         baseEImpuestoImportacionesBI.importacionesBIBase = (parseFloat(parseFloat(baseEImpuestoImportacionesBI.importacionesBIBase) + baseImponible).toFixed(2)).toString();
@@ -987,7 +1003,7 @@ define(["L34/Utilidades", "N/record", "N/search", "N/runtime", "N/log", "N/ui/se
                     }
                 }
                 //Deducible - Rectificación de deducciones [40][41]
-                if (((tasa == 4 && (disp == "VendCred" || disp == "CardRfnd")) || (tasa == 10 && (disp == "VendCred" || disp == "CardRfnd")) || (tasa == 21 && (disp == "VendCred" || disp == "CardRfnd"))) || ((disp == "VendCred" || disp == "CardRfnd") && impor == "T" && codCE != "T" && autorepercutido != "T")) {
+                if (((tasa == 4 && (tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd")) || (tasa == 10 && (tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd")) || (tasa == 21 && (tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd"))) || ((tipoTransaccion == "VendCred" || tipoTransaccion == "CardRfnd") && importacion == "T" && codCE != "T" && autorepercutido != "T")) {
                     baseEImpuestoRecDed.existeTasa = true;
                     baseEImpuestoRecDed.baseRecDed = (parseFloat(parseFloat(baseEImpuestoRecDed.baseRecDed) + baseImponible).toFixed(2)).toString();
                     // ! se multiplica por -1
